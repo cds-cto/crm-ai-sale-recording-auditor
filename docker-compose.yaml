@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    container_name: crm-ai-sale-recording-auditor
+    command: python ./src/main.py
+    ports:
+      - 5678:5678
+    volumes:
+      - .:/code
+# Run : docker compose up --build -d

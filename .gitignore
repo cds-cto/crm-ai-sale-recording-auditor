@@ -1,0 +1,8 @@
+
+*.pyc
+src/config/config.ini
+**/__pycache__/
+.vscode/
+src/config.ini
+src/recordings/
+src/transcript/
