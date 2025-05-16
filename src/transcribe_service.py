@@ -113,7 +113,6 @@ class TranscribeService:
             transcript_uri = response["TranscriptionJob"]["Transcript"][
                 "TranscriptFileUri"
             ]
-            print(f"Transcript available at: {transcript_uri}")
             return transcript_uri
         return None
 

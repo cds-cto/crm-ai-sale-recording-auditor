@@ -36,10 +36,27 @@ class AISaleService:
         print(res.text)
 
     # ********************************************************************************************************
+    # Get General Error List
+    # ********************************************************************************************************
+    def _get_general_error_list(self):
+        prompt = ""
+        general_error_list = self.ai_sale_general_error_list.collection.find()
+        for error in general_error_list:
+            prompt += f"- {error['issue_code']}: {error['issue_name']}\n"
+            for check in error["issue_check"]:
+                prompt += f"  {check.format(assign_company='Citizen Debt Services')}\n"
+
+        return prompt
+
+    # ********************************************************************************************************
     # Process
     # ********************************************************************************************************
 
-    def process(self):
+    def process(
+        self,
+        from_date_time: datetime,
+        to_date_time: datetime,
+    ):
         # ******** get external IP
         self._get_external_ping()
 
@@ -47,6 +64,11 @@ class AISaleService:
         self.ai_sale_logs = MongoConnect(
             config_file="config.ini",
             config_name="AI_SALE_LOGS",
+        )
+
+        self.ai_sale_general_error_list = MongoConnect(
+            config_file="config.ini",
+            config_name="AI_SALE_GENERAL_ERROR_LIST",
         )
 
         # ********  Init transcription Service
@@ -72,7 +94,11 @@ class AISaleService:
         recordings = RecordingBatchModel(batch=[])
 
         # ********  Get Recordings
-        self.crm_api_service.get_recordings(Recordings=recordings)
+        self.crm_api_service.get_recordings(
+            Recordings=recordings,
+            from_date_time=from_date_time,
+            to_date_time=to_date_time,
+        )
 
         print("************************************************************")
 
@@ -81,7 +107,7 @@ class AISaleService:
     # ********************************************************************************************************
     # Solo Handling
     # ********************************************************************************************************
-    def handling(self, recording: RecordingModel):
+    def handling(self, recording: RecordingModel, general_error_list: str):
         # ********  Check existing in mongo
         if self.ai_sale_logs.collection.find_one(
             {"document_id": recording.document_id}
@@ -111,7 +137,9 @@ class AISaleService:
         )
 
         # ********  GPT process
-        gpt_response = self.gpt_service.process(recording=recording)
+        gpt_response = self.gpt_service.process(
+            recording=recording, general_error_list=general_error_list
+        )
 
         gpt_response = json.loads(gpt_response)
 
@@ -153,11 +181,15 @@ class AISaleService:
     # MAIN HANDLING
     # ********************************************************************************************************
     def handleTask(self, recordings: RecordingBatchModel):
+        # ********  Get General Error List
+        general_error_list = self._get_general_error_list()
 
         for recording in recordings.batch:
 
             # ********  Handling
-            Action = self.handling(recording=recording)
+            Action = self.handling(
+                recording=recording, general_error_list=general_error_list
+            )
 
             if Action == self.TRANS_CODE.GENERAL.ERROR_CODE.F101:
                 # Add error code for non-audio file
@@ -178,3 +210,67 @@ class AISaleService:
                 print(f"Document {recording.document_id} already exists in mongo")
 
             print("------------------------------Done------------------------------")
+
+    # ********************************************************************************************************
+    # TESTING Process Check GPT
+    # ********************************************************************************************************
+    def process_check_gpt(self):
+        """
+        Process a text file and check its content using GPT for testing
+        Args:
+            file_path (str): Path to the text file to process
+        """
+        print("\n============================= START  ===============================")
+
+        self.ai_sale_general_error_list = MongoConnect(
+            config_file="config.ini",
+            config_name="AI_SALE_GENERAL_ERROR_LIST",
+        )
+        general_error_list = self._get_general_error_list()
+
+        # Create a recording model with the content
+        recording = RecordingModel(
+            document_name="7823615724d81e942492e34c9da6b27f9de65bd82735748.mp3",
+            document_id="",
+            document_title="",
+            profile_id="",
+            first_name="",
+            last_name="",
+            sale_company="",
+            sale_employee_id="",
+            sale_employee_name="",
+            document_uploaded_by_id="",
+            document_uploaded_by_name="",
+            document_uploaded_at="",
+            success=True,
+            duration=100,
+            transcript="",
+            error_code_list=[],
+            created_at=datetime.now(pytz.utc),
+            modified_at=datetime.now(pytz.utc),
+            recording_file_path="",
+            recording_url="",
+            file_extension="",
+        )
+
+        # Process with GPT
+        self.gpt_service = GPTService(config_file="config.ini", config_name="OPENAI")
+        gpt_response = self.gpt_service.process(
+            recording=recording, general_error_list=general_error_list
+        )
+        gpt_response = json.loads(gpt_response)
+
+        # Print results
+        print(
+            "\n============================= GPT Analysis Results ==============================="
+        )
+        print(f"Status: {gpt_response['status']}")
+        print("\nError Codes:")
+        for error in gpt_response["error_code_list"]:
+            print(f"- {error['error_code']}: {error['error_message']}")
+            print(f"   {error['error_reference']}\n\n")
+        print(
+            "====================================================================================\n"
+        )
+
+        return gpt_response

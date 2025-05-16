@@ -48,3 +48,16 @@ class Utility:
     @staticmethod
     def remove_audio_extension(file_path):
         return file_path.replace(".mp3", "").replace(".wav", "")
+
+    @staticmethod
+    def edit_gpt_response(response: str) -> str:
+        """
+        Cleans and formats GPT response by removing newlines and JSON code block markers
+        Args:
+            response (str): Raw GPT response string
+        Returns:
+            str: Cleaned response string
+        """
+        return (
+            response.replace("\n", "").replace("```json", "").replace("```", "").strip()
+        )

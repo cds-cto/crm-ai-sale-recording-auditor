@@ -1,6 +1,6 @@
 from service import AISaleService
 import debugpy
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 
@@ -10,7 +10,12 @@ def main():
     pdt_now = utc_now.astimezone(pdt_timezone)
 
     ai_sale_service = AISaleService()
-    ai_sale_service.process()
+    # for testing
+    # ai_sale_service.process_check_gpt()
+    ai_sale_service.process(
+        from_date_time=pdt_now,
+        to_date_time=pdt_now + timedelta(days=1),
+    )
 
     utc_now_end = datetime.now(pytz.utc)
     pdt_now_end = utc_now_end.astimezone(pdt_timezone)

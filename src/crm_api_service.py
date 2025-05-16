@@ -75,7 +75,12 @@ class CrmAPIService:
     # ********************************************************************************************************
     # Get Recordings
     # ********************************************************************************************************
-    def get_recordings(self, Recordings: RecordingBatchModel):
+    def get_recordings(
+        self,
+        Recordings: RecordingBatchModel,
+        from_date_time: datetime,
+        to_date_time: datetime,
+    ):
         """Get tasks from start_date to end_date"""
 
         url = f"{self.base_url}/api/Document/search"
@@ -96,7 +101,14 @@ class CrmAPIService:
                             "value": SALE_RECORDING_CATEGORY,
                             "operator": 2,
                         },
-                    }
+                    },
+                    {
+                        "columnName": "createdAt",
+                        "search": {
+                            "value": f"{from_date_time.strftime('%m-%d-%Y')}|{to_date_time.strftime('%m-%d-%Y')}",
+                            "operator": 4,
+                        },
+                    },
                 ],
                 "order": [
                     {"columnName": "status", "direction": 0, "directionName": "asc"},
