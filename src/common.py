@@ -33,7 +33,7 @@ PROFILE_ASSIGNEE_SALES = "028f546a-0429-4c9a-b50d-436bfa655075"
 
 
 ######################## CRM CONFIG ########################
-CHUNK_SIZE = 1
+CHUNK_SIZE = 50
 
 ######################## SETTLEMENT PAYMENT CONFIG ########################
 

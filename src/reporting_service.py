@@ -42,7 +42,7 @@ class ReportingService:
                                     "text": "Transcript",
                                     "onClick": {
                                         "openLink": {
-                                            "url": "https://www.google.com",
+                                            "url": f"https://api.cdszone.com/api/ai/sale-recording/log/transcript/{recording.document_id}",
                                         }
                                     },
                                 },
