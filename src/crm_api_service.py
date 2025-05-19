@@ -340,6 +340,30 @@ class CrmAPIService:
             print(f"Error fetching libility profile: {str(e)}")
             raise Exception(f"Error fetching libility profile: {str(e)}")
 
+    # ********************************************************************************************************
+    # Get Profile Info
+    # ********************************************************************************************************
+    def get_profile_info(self, profile_id: str):
+
+        url = f"{self.base_url}/api/Profile/{profile_id}/info"
+        headers = {
+            "Content-type": "application/json",
+            "authorization": f"Bearer {self.token}",
+        }
+        try:
+            response = self.crm_r.get(url, headers=headers, verify=False)
+
+            if response.status_code != 200:
+                raise Exception(
+                    f"Fetching profile info failed with code {response.status_code}"
+                )
+
+            return response.json()["data"]
+
+        except Exception as e:
+            print(f"Error fetching profile info: {str(e)}")
+            raise Exception(f"Error fetching profile info: {str(e)}")
+
     # ---------------------------------------------------------------------------------------------------------
     # Utility Functions
     # ---------------------------------------------------------------------------------------------------------

@@ -191,6 +191,13 @@ class AISaleService:
                 recording=recording, general_error_list=general_error_list
             )
 
+            # get profile info
+            profile_info = self.crm_api_service.get_profile_info(
+                profile_id=recording.profile_id
+            )
+            recording.profile_status = profile_info["statusName"]
+            recording.enrolled_date = profile_info["enrolledDate"]
+
             if Action == self.TRANS_CODE.GENERAL.ERROR_CODE.F101:
                 # Add error code for non-audio file
                 recording.error_code_list = [
@@ -201,10 +208,10 @@ class AISaleService:
                     }
                 ]
                 # Log and report error
-                self.reporting_service.saveAndReport(recording=recording)
+                self.reporting_service.push_to_make_report(recording=recording)
             elif Action != self.TRANS_CODE.GENERAL.ERROR_CODE.X100:
                 # Send to Gchat for other cases except X100
-                self.reporting_service.saveAndReport(recording=recording)
+                self.reporting_service.push_to_make_report(recording=recording)
             else:
                 # Just print for X100 case
                 print(f"Document {recording.document_id} already exists in mongo")
@@ -222,10 +229,19 @@ class AISaleService:
         """
         print("\n============================= START  ===============================")
 
+        # ********  Init Mongo DB
+        self.ai_sale_logs = MongoConnect(
+            config_file="config.ini",
+            config_name="AI_SALE_LOGS",
+        )
+
         self.ai_sale_general_error_list = MongoConnect(
             config_file="config.ini",
             config_name="AI_SALE_GENERAL_ERROR_LIST",
         )
+        # ********  Init Reporting Service
+        self.reporting_service = ReportingService()
+
         general_error_list = self._get_general_error_list()
 
         # Create a recording model with the content
@@ -261,16 +277,28 @@ class AISaleService:
         gpt_response = json.loads(gpt_response)
 
         # Print results
-        print(
-            "\n============================= GPT Analysis Results ==============================="
-        )
-        print(f"Status: {gpt_response['status']}")
-        print("\nError Codes:")
-        for error in gpt_response["error_code_list"]:
-            print(f"- {error['error_code']}: {error['error_message']}")
-            print(f"   {error['error_reference']}\n\n")
-        print(
-            "====================================================================================\n"
-        )
+        # print(
+        #     "\n============================= GPT Analysis Results ==============================="
+        # )
+        # print(f"Status: {gpt_response['status']}")
+        # print("\nError Codes:")
+        # for error in gpt_response["error_code_list"]:
+        #     print(f"- {error['error_code']}: {error['error_message']}")
+        #     print(f"   {error['error_reference']}\n\n")
+        # print(
+        #     "====================================================================================\n"
+        # )
 
-        return gpt_response
+        # get document from mongo by document_id
+        document = self.ai_sale_logs.collection.find_one(
+            {"document_name": recording.document_name}
+        )
+        document["error_code_list"] = gpt_response["error_code_list"]
+        document["recording_url"] = ""
+        document["recording_file_path"] = ""
+        document["file_extension"] = ""
+        document_final = RecordingModel(**document)
+
+        self.reporting_service.push_to_make_report(recording=document_final)
+
+        return True

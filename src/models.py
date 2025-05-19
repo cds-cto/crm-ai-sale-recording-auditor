@@ -47,6 +47,8 @@ class RecordingModel(BaseModel):
     recording_file_path: str
     weight_percentage: str = None
     file_extension: str = None
+    profile_status: str = None
+    enrolled_date: str = None
 
 
 class RecordingBatchModel(BaseModel):
