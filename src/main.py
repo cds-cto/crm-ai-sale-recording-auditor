@@ -13,7 +13,7 @@ def main():
     # for testing
     # ai_sale_service.process_check_gpt()
     ai_sale_service.process(
-        from_date_time=pdt_now,
+        from_date_time=pdt_now - timedelta(days=3),
         to_date_time=pdt_now + timedelta(days=1),
     )
 
