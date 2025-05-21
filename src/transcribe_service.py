@@ -49,7 +49,7 @@ class TranscribeService:
         aws_config = self.load_aws_config()
         if not aws_config:
             return False
-        print(aws_config)
+
         s3_client = boto3.client("s3", **aws_config)
         try:
             response = s3_client.upload_file(file_name, bucket, object_name)

@@ -37,25 +37,28 @@ class GPTService:
         Send chunk and previous summary to GPT to audit the conversation
         """
         # Create context
-        prompt = """
-                ## Previous Context
-                {previous_context}
+        # prompt = """
+        #         ## Previous Context
+        #         {previous_context}
 
-                ## Current Chunk
-                {current_chunk}
+        #         ## Current Chunk
+        #         {current_chunk}
 
-                """
+        #         """
 
-        if previous_summary:
-            prompt = prompt.format(
-                previous_context=f"Previous Response:\n{previous_summary}",
-                current_chunk=f"Next Chunk of Data:\n{json.dumps(chunk, ensure_ascii=False, indent=2)}",
-            )
-        else:
-            prompt = prompt.format(
-                previous_context="No previous context available.",
-                current_chunk=f"Next Chunk of Data:\n{json.dumps(chunk, ensure_ascii=False, indent=2)}",
-            )
+        # if previous_summary:
+        #     prompt = prompt.format(
+        #         previous_context=f"Previous Response:\n{previous_summary}",
+        #         current_chunk=f"Next Chunk of Data:\n{json.dumps(chunk, ensure_ascii=False, indent=2)}",
+        #     )
+        # else:
+        #     prompt = prompt.format(
+        #         previous_context="No previous context available.",
+        #         current_chunk=f"Next Chunk of Data:\n{json.dumps(chunk, ensure_ascii=False, indent=2)}",
+        #     )
+
+        # changed: since chunk_size = 100000, so we can use one chunk
+        prompt = json.dumps(chunk, ensure_ascii=False, indent=2)
 
         # Send request to GPT-4
         response = self.client.chat.completions.create(
@@ -122,6 +125,8 @@ You must respond **only** with a JSON object in one of the following formats. **
                 {"role": "user", "content": prompt},
             ],
             max_tokens=2000,
+            temperature=0,
+            top_p=1,
         )
 
         return response.choices[0].message.content
@@ -231,6 +236,8 @@ You must respond **only** with a JSON object in one of the following formats. **
                 {"role": "user", "content": prompt},
             ],
             max_tokens=500,
+            temperature=0,
+            top_p=1,
         )
 
         return response.choices[0].message.content
