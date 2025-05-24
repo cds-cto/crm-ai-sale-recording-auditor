@@ -70,9 +70,9 @@ CMD ["python", "./src/main.py"]
 #********** Note Gcloud Trigger is in UTC Time
 #********** Copy and Run all command below
 
-# docker build -t cft-transaction-sync-hourly .
-# docker tag cft-transaction-sync-hourly us-west2-docker.pkg.dev/polling-apps/core/cft-transaction-sync-hourly:lastest
-# docker push us-west2-docker.pkg.dev/polling-apps/core/cft-transaction-sync-hourly:lastest
+# docker build -t crm-ai-sale-recording-auditor .
+# docker tag crm-ai-sale-recording-auditor  us-west2-docker.pkg.dev/polling-apps/core/crm-ai-sale-recording-auditor:lastest
+# docker push us-west2-docker.pkg.dev/polling-apps/core/crm-ai-sale-recording-auditor:lastest
 
 
 # docker build -t global-transaction-sync-mass .
