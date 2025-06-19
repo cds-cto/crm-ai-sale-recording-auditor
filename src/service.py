@@ -64,8 +64,7 @@ class AISaleService:
                     Documents.DocumentId As DocumentId,
                     Documents.Title As DocumentTitle,
                     Documents.ProfileId As ProfileId,
-                    Profiles.FirstName, 
-                    Profiles.LastName,
+                    CONCAT(Profiles.FirstName, ' ', Profiles.LastName) As ClientName,
                     Companies.Name As SalesCompany,
                     sales.EmployeeId As SalesId,
                     sales.Alias As SalesName,
@@ -74,6 +73,8 @@ class AISaleService:
                     DATEADD(HOUR, -7, Documents.CreatedAt) As DocumentUploadedAt,
                     Profiles.SubmittedDate
 
+
+
                 FROM Documents
                     LEFT JOIN Profiles ON Documents.ProfileId = Profiles.ProfileId
                     LEFT JOIN ProfileAssignees ON Profiles.ProfileId = ProfileAssignees.ProfileId
@@ -81,13 +82,17 @@ class AISaleService:
                     LEFT JOIN Employees sales ON ProfileAssignees.EmployeeId = sales.EmployeeId
                     LEFT JOIN Companies ON sales.CompanyId = Companies.CompanyId
                     LEFT JOIN Employees documentupload ON Documents.CreatedBy = documentupload.EmployeeId
-                    LEFT JOIN ProfileAdditionalStatuses ON Profiles.ProfileId = ProfileAdditionalStatuses.ProfileId
-                        AND ProfileAdditionalStatuses.AdditionalStatusId = '50C25FCA-23E0-4E69-844E-22EDF8E88DA2'
+                    LEFT JOIN ProfileAdditionalStatuses RecordingStatus ON Profiles.ProfileId = RecordingStatus.ProfileId
+                        AND RecordingStatus.AdditionalStatusId = '50C25FCA-23E0-4E69-844E-22EDF8E88DA2'
+                    LEFT JOIN ProfileAdditionalStatuses WCStatus ON Profiles.ProfileId = WCStatus.ProfileId
+                        AND WCStatus.AdditionalStatusId = 'E390DAEA-B84B-42A7-B95B-FE1FAC50F7C3'
                 WHERE Companies.Type = 1
                     AND Profiles.Status = 1
-                    AND ProfileAdditionalStatuses.Value = 'Uploaded'
+                    AND RecordingStatus.Value = 'Uploaded'
+                    AND WCStatus.Value = 'COMPLETED'
                     AND Documents.Category = 'ce25a439-86de-48c0-aebb-18de5d46ea61'
-                    AND Documents.CreatedAt >= ? """
+                    AND Documents.CreatedAt >= ?
+                """
         
         fetch_data = self.sql_service.fetchall(SQL, [from_date_time])
 
