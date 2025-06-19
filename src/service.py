@@ -300,12 +300,13 @@ class AISaleService:
                     }
                 ]
                 # Log and report error
-                self.reporting_service.push_to_make_report(recording=recording)
                 self.reporting_service.push_blank_call_to_make_report(recording=recording)
+                self.reporting_service.push_to_make_report(recording=recording)
+                
             elif Action != self.TRANS_CODE.GENERAL.ERROR_CODE.X100:
                 # Send to Gchat for other cases except X100
-                self.reporting_service.push_to_make_report(recording=recording)
                 self.reporting_service.push_blank_call_to_make_report(recording=recording)
+                self.reporting_service.push_to_make_report(recording=recording)
             else:
                 # Just print for X100 case
                 print(f"Document {recording.document_id} already exists in mongo")
