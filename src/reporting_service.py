@@ -17,7 +17,7 @@ class ReportingService:
         config = configparser.ConfigParser()
         config.read(config_file_path)
         self.make_webhook = config["MAKE"]["WEBHOOK"]
-
+        self.make_blank_call_webhook = config["MAKE"]["BLANK_CALL_WEBHOOK"]
     def _getTodayTime(self):
         utc_now = datetime.datetime.now(pytz.utc)
         pdt_timezone = pytz.timezone("America/Los_Angeles")
@@ -186,6 +186,54 @@ class ReportingService:
 
             response = requests.post(
                 self.make_webhook,
+                data=json.dumps(payload),
+                headers={"Content-Type": "application/json"},
+            )
+
+            if response.status_code != 200:
+                raise Exception(
+                    f"Sending report to make.com failed with code {response.status_code}"
+                )
+
+            print(
+                f"Successfully sent report to make.com for document: {recording.document_name}"
+            )
+        except requests.exceptions.RequestException as e:
+            print(f"Error sending report to make.com: {str(e)}")
+
+
+    # ********************************************************************************************************
+    # Push to make.com report
+    # ********************************************************************************************************
+    def push_blank_call_to_make_report(self, recording: RecordingModel):
+        # Prepare JSON payload matching the required format
+        payload = {
+            "document_name": recording.document_name,
+            "profile_id": recording.profile_id,
+            "error_list": (
+                [
+                    {
+                        "error_code": "F101",
+                        "error_message": "Blank call",
+                        "error_reference": [],
+                    }
+                ]
+            ),
+            "transcript": f"https://api.cdszone.com/api/ai/sale-recording/log/transcript/{recording.document_id}",
+            "profile_status": recording.profile_status,
+            "client_name": recording.first_name + " " + recording.last_name,
+            "sales_employee": recording.sale_employee_name,
+            "sales_company": recording.sale_company,
+            "enrolled_date": None,
+            "submitted_date": str(recording.submitted_date) if recording.submitted_date else None,
+            "document_uploaded_at": str(recording.document_uploaded_at) if recording.document_uploaded_at else None,
+        }
+
+        # Send POST request to make.com webhook URL
+        try:
+
+            response = requests.post(
+                self.make_blank_call_webhook,
                 data=json.dumps(payload),
                 headers={"Content-Type": "application/json"},
             )

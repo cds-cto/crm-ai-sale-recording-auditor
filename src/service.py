@@ -16,7 +16,7 @@ from models import RecordingBatchModel, RecordingModel
 from reporting_service import ReportingService
 from transcribe_service import TranscribeService
 from validation_service import ValidationService
-
+from sqlconnect import SqlConnect
 
 class AISaleService:
     def __init__(self):
@@ -47,6 +47,90 @@ class AISaleService:
                 prompt += f"  {check.format(assign_company='Citizen Debt Services')}\n"
 
         return prompt
+    
+    # ********************************************************************************************************
+    # Get Recordings With SQL 
+    # ********************************************************************************************************
+    def get_recordings_with_sql(
+        self,
+        Recordings: RecordingBatchModel,
+        from_date_time: datetime,
+        to_date_time: datetime,
+    ):
+        """Get tasks from start_date to end_date"""
+        
+        SQL = """SELECT
+                    Documents.Name As DocumentName,
+                    Documents.DocumentId As DocumentId,
+                    Documents.Title As DocumentTitle,
+                    Documents.ProfileId As ProfileId,
+                    Profiles.FirstName, 
+                    Profiles.LastName,
+                    Companies.Name As SalesCompany,
+                    sales.EmployeeId As SalesId,
+                    sales.Alias As SalesName,
+                    documentupload.EmployeeId As DocumentUploadedById,
+                    documentupload.Alias As DocumentUploadedByName,
+                    DATEADD(HOUR, -7, Documents.CreatedAt) As DocumentUploadedAt,
+                    Profiles.SubmittedDate
+
+                FROM Documents
+                    LEFT JOIN Profiles ON Documents.ProfileId = Profiles.ProfileId
+                    LEFT JOIN ProfileAssignees ON Profiles.ProfileId = ProfileAssignees.ProfileId
+                        AND ProfileAssignees.AssigneeId = '028F546A-0429-4C9A-B50D-436BFA655075'
+                    LEFT JOIN Employees sales ON ProfileAssignees.EmployeeId = sales.EmployeeId
+                    LEFT JOIN Companies ON sales.CompanyId = Companies.CompanyId
+                    LEFT JOIN Employees documentupload ON Documents.CreatedBy = documentupload.EmployeeId
+                    LEFT JOIN ProfileAdditionalStatuses ON Profiles.ProfileId = ProfileAdditionalStatuses.ProfileId
+                        AND ProfileAdditionalStatuses.AdditionalStatusId = '50C25FCA-23E0-4E69-844E-22EDF8E88DA2'
+                WHERE Companies.Type = 1
+                    AND Profiles.Status = 1
+                    AND ProfileAdditionalStatuses.Value = 'Uploaded'
+                    AND Documents.Category = 'ce25a439-86de-48c0-aebb-18de5d46ea61'
+                    AND Documents.CreatedAt >= ? """
+        
+        fetch_data = self.sql_service.fetchall(SQL, [from_date_time])
+
+        for data in fetch_data:
+            document_name = data[0]
+            document_id = data[1].lower()
+            document_title = data[2]
+            profile_id = data[3]
+            first_name = data[4]
+            last_name = data[5]
+            sale_company = data[6]
+            sale_employee_id = data[7].lower()
+            sale_employee_name = data[8]
+            document_uploaded_by_id = data[9].lower()
+            document_uploaded_by_name = data[10]
+            document_uploaded_at = data[11]
+            submitted_date = data[12]
+            Recordings.batch.append(
+                RecordingModel(
+                    document_name=document_name,
+                    document_id=document_id,
+                    document_title=document_title,
+                    profile_id=profile_id,
+                    first_name=first_name,
+                    last_name=last_name,
+                    sale_company=sale_company,
+                    sale_employee_id=sale_employee_id,
+                    sale_employee_name=sale_employee_name,
+                    document_uploaded_by_id=document_uploaded_by_id,
+                    document_uploaded_by_name=document_uploaded_by_name,
+                    document_uploaded_at=document_uploaded_at,
+                    submitted_date=submitted_date,
+                    success=False,
+                    duration=0,
+                    error_code_list=[],
+                    # ********  extra fields
+                    recording_url="",
+                    recording_file_path="",
+                )
+            )
+        print("Total Tasks: ", len(Recordings.batch))
+
+    
 
     # ********************************************************************************************************
     # Process
@@ -90,15 +174,23 @@ class AISaleService:
         # ********  Init Reporting Service
         self.reporting_service = ReportingService()
 
+        # ********  Init SQL
+        self.sql_service = SqlConnect(
+            config_file="config.ini", config_name="SQL_NEW"
+        )
+        self.sql_service.init()
+
         # ********  Init batch model
         recordings = RecordingBatchModel(batch=[])
 
         # ********  Get Recordings
-        self.crm_api_service.get_recordings(
-            Recordings=recordings,
-            from_date_time=from_date_time,
-            to_date_time=to_date_time,
-        )
+        # self.crm_api_service.get_recordings(
+        #     Recordings=recordings,
+        #     from_date_time=from_date_time,
+        #     to_date_time=to_date_time,
+        # )
+
+        self.get_recordings_with_sql(Recordings=recordings, from_date_time=from_date_time, to_date_time=to_date_time)
 
         print("************************************************************")
 
@@ -209,9 +301,11 @@ class AISaleService:
                 ]
                 # Log and report error
                 self.reporting_service.push_to_make_report(recording=recording)
+                self.reporting_service.push_blank_call_to_make_report(recording=recording)
             elif Action != self.TRANS_CODE.GENERAL.ERROR_CODE.X100:
                 # Send to Gchat for other cases except X100
                 self.reporting_service.push_to_make_report(recording=recording)
+                self.reporting_service.push_blank_call_to_make_report(recording=recording)
             else:
                 # Just print for X100 case
                 print(f"Document {recording.document_id} already exists in mongo")

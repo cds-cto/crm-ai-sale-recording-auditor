@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List
+from datetime import datetime
 
 
 class SettlementPaymentModel(BaseModel):
@@ -37,7 +38,7 @@ class RecordingModel(BaseModel):
     sale_employee_name: str
     document_uploaded_by_id: str
     document_uploaded_by_name: str
-    document_uploaded_at: str
+    document_uploaded_at: datetime
     success: bool
     duration: int
     transcript: str = None
@@ -49,7 +50,7 @@ class RecordingModel(BaseModel):
     file_extension: str = None
     profile_status: str = None
     enrolled_date: str = None
-
+    submitted_date: datetime = None
 
 class RecordingBatchModel(BaseModel):
     batch: List[RecordingModel]
