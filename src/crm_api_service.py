@@ -61,15 +61,11 @@ class CrmAPIService:
                     self.refresh_token = response.json()["data"]["refreshToken"]
                     return True
                 else:
-                    raise ValueError(
-                        f"Login failed with status code: {response.status_code}"
-                    )
+                    raise ValueError(f"Login failed with status code: {response.status_code}")
 
             except (requests.exceptions.ConnectionError, ConnectionResetError) as e:
                 if attempt == max_retries - 1:  # Last attempt
-                    raise Exception(
-                        f"Failed to connect after {max_retries} attempts: {str(e)}"
-                    )
+                    raise Exception(f"Failed to connect after {max_retries} attempts: {str(e)}")
                 time.sleep(2**attempt)  # Exponential backoff: 1, 2, 4 seconds
 
     # ********************************************************************************************************
@@ -116,13 +112,9 @@ class CrmAPIService:
                 ],
             }
 
-            response = self.crm_r.post(
-                url, headers=headers, data=json.dumps(data), verify=False
-            )
+            response = self.crm_r.post(url, headers=headers, data=json.dumps(data), verify=False)
             if response.status_code != 200:
-                raise Exception(
-                    f"Fetching tasks failed with code {response.status_code}"
-                )
+                raise Exception(f"Fetching tasks failed with code {response.status_code}")
 
             total_records = response.json()["data"]["totalRecords"]
             all_data = []
@@ -132,54 +124,28 @@ class CrmAPIService:
                 data["start"] = start
                 data["length"] = CHUNK_SIZE
 
-                response = self.crm_r.post(
-                    url, headers=headers, data=json.dumps(data), verify=False
-                )
+                response = self.crm_r.post(url, headers=headers, data=json.dumps(data), verify=False)
 
                 if response.status_code != 200:
-                    raise Exception(
-                        f"Fetching tasks failed with code {response.status_code}"
-                    )
+                    raise Exception(f"Fetching tasks failed with code {response.status_code}")
 
                 all_data.extend(response.json()["data"]["data"])
                 # break  # TODO: for testing
 
             for data in all_data:
 
-                profile_assignment = self._filter_profile_assignments_sales(
-                    data["profileAssignees"]
-                )
+                profile_assignment = self._filter_profile_assignments_sales(data["profileAssignees"])
                 Recordings.batch.append(
                     RecordingModel(
                         document_name=data["name"],
                         document_id=data["documentId"],
                         document_title=data["title"],
                         profile_id=data["profileId"],
-                        first_name=(
-                            data["profileName"].split()[0]
-                            if data["profileName"]
-                            else ""
-                        ),
-                        last_name=(
-                            " ".join(data["profileName"].split()[1:])
-                            if data["profileName"]
-                            else ""
-                        ),
-                        sale_company=(
-                            profile_assignment["companyName"]
-                            if profile_assignment
-                            else ""
-                        ),
-                        sale_employee_id=(
-                            profile_assignment["employeeId"]
-                            if profile_assignment
-                            else ""
-                        ),
-                        sale_employee_name=(
-                            profile_assignment["employeeName"]
-                            if profile_assignment
-                            else ""
-                        ),
+                        first_name=(data["profileName"].split()[0] if data["profileName"] else ""),
+                        last_name=(" ".join(data["profileName"].split()[1:]) if data["profileName"] else ""),
+                        sale_company=(profile_assignment["companyName"] if profile_assignment else ""),
+                        sale_employee_id=(profile_assignment["employeeId"] if profile_assignment else ""),
+                        sale_employee_name=(profile_assignment["employeeName"] if profile_assignment else ""),
                         document_uploaded_by_id=data["createdBy"],
                         document_uploaded_by_name=data["createdByName"],
                         document_uploaded_at=data["createdAt"],
@@ -212,13 +178,9 @@ class CrmAPIService:
         try:
             data = {"URL": True}
 
-            response = self.crm_r.post(
-                url, headers=headers, data=json.dumps(data), verify=False
-            )
+            response = self.crm_r.post(url, headers=headers, data=json.dumps(data), verify=False)
             if response.status_code != 200:
-                raise Exception(
-                    f"Fetching tasks failed with code {response.status_code}"
-                )
+                raise Exception(f"Fetching tasks failed with code {response.status_code}")
 
             url_link = response.json()["data"]["url"]
 
@@ -242,9 +204,7 @@ class CrmAPIService:
             # Download file directly without streaming
             response = requests.get(recording.recording_url, verify=False, stream=False)
             if response.status_code != 200:
-                raise Exception(
-                    f"Downloading recording failed with code {response.status_code}"
-                )
+                raise Exception(f"Downloading recording failed with code {response.status_code}")
 
             with open(file_path, "wb") as f:
                 f.write(response.content)
@@ -315,9 +275,7 @@ class CrmAPIService:
         try:
             response = self.crm_r.get(url, headers=headers, verify=False)
             if response.status_code != 200:
-                raise Exception(
-                    f"Fetching libility profile failed with code {response.status_code}"
-                )
+                raise Exception(f"Fetching libility profile failed with code {response.status_code}")
 
             data = response.json()["data"]
             results = []
@@ -326,9 +284,7 @@ class CrmAPIService:
                     WeightPercentageModel(
                         enrolled=item["enrolled"],
                         accountType=item["accountType"],
-                        averageSettlementLegalPercentage=item[
-                            "averageSettlementLegalPercentage"
-                        ],
+                        averageSettlementLegalPercentage=item["averageSettlementLegalPercentage"],
                         averageSettlementPercentage=item["averageSettlementPercentage"],
                         originalBalance=item["originalBalance"],
                     )
@@ -354,9 +310,7 @@ class CrmAPIService:
             response = self.crm_r.get(url, headers=headers, verify=False)
 
             if response.status_code != 200:
-                raise Exception(
-                    f"Fetching profile info failed with code {response.status_code}"
-                )
+                raise Exception(f"Fetching profile info failed with code {response.status_code}")
 
             return response.json()["data"]
 
@@ -393,9 +347,7 @@ class CrmAPIService:
         for item in liability_profiles:
             if item.enrolled:
                 average_percentage = (
-                    item.averageSettlementLegalPercentage
-                    if item.accountType == 1
-                    else item.averageSettlementPercentage
+                    item.averageSettlementLegalPercentage if item.accountType == 1 else item.averageSettlementPercentage
                 )
 
                 # Use 0.5 as default if no average percentage

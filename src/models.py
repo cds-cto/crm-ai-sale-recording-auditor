@@ -51,6 +51,8 @@ class RecordingModel(BaseModel):
     profile_status: str = None
     enrolled_date: str = None
     submitted_date: datetime = None
+    company_name: str = "CITIZEN DEBT SERVICES"
+
 
 class RecordingBatchModel(BaseModel):
     batch: List[RecordingModel]

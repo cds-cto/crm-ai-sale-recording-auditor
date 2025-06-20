@@ -1,0 +1,208 @@
+[
+    {
+        "issue_id": "A69BE6AD-3A67-4B2E-BE8C-9291FE9C58DF",
+        "issue_code": "E100",
+        "issue_name": "Claim that program is from the government",
+        "issue_description": "Describes the false claim that the debt settlement program is government-backed, government-run, or affiliated with a federal or state agency. This misleads clients about the legitimacy and oversight of the service.",
+        "issue_check": [
+            "1. Flag if the speaker says or implies that {assign_company}'s program is government-run, sponsored, or affiliated (e.g., This is a government program, We work with the state, It's federally backed).",
+            "2. Do not flag if they mention regulatory compliance or licensing (e.g., We follow FTC rules, We're licensed in your state) without implying government affiliation.",
+            "3. References to government or state are fine as long as they don't suggest official endorsement."
+        ]
+    },
+    {
+        "issue_id": "F540D7E6-B46E-4B86-9EA9-D8BB90ADD72F",
+        "issue_code": "E101",
+        "issue_name": "Claim that we are a loan company or will loan money to clients",
+        "issue_description": "Sales agent implies or states that the company offers loans or will lend money to the client as part of the program, which misrepresents the nature of debt settlement.",
+        "issue_check": [
+            "1. Flag if the speaker says or implies that {assign_company} offers loans or lends money as part of the program (e.g., We'll loan you money, You'll get a cash advance, We'll front the funds to settle your debts).",
+            "2. Do not flag if they clearly describe client-funded deposits or settlement savings, without suggesting the company provides the money.",
+            "3. Terms like savings, fund, or account are fine if it's clear the funds come from the client—not a loan."
+        ]
+    },
+    {
+        "issue_id": "9C60CC74-A3BE-46D3-AB62-0C4DD5054BB2",
+        "issue_code": "E102",
+        "issue_name": "Claim that we do debt validation",
+        "issue_description": "States or implies that the company provides debt validation services (e.g., challenging the validity of debts), which is a separate and legally distinct process from debt settlement.",
+        "issue_check": [
+            "1. Flag if the speaker says or implies that {assign_company} validates, disputes, or challenges the legitimacy of debts (e.g., We'll make them prove the debt, We'll dispute the debt for you, We remove illegitimate debts).",
+            "2. Do not flag if they only mention negotiating, settling, or reducing debts, or helping clients understand balances—without implying debt validation or legal disputes.",
+            "3. Phrases like we negotiate your debt or we help settle accounts are fine as long as they don't suggest formal debt validation."
+        ]
+    },
+    {
+        "issue_id": "6B0F5457-B7DA-4E36-8B17-C0C98B201FC4",
+        "issue_code": "E103",
+        "issue_name": "Claim that we do credit repair",
+        "issue_description": "Sales agent states or suggests that the company will improve, fix, or clean up a client's credit report, which requires a separate licensure and regulatory framework.",
+        "issue_check": [
+            "1. Flag if the speaker says or implies that {assign_company} will directly repair or improve the client's credit (e.g., We'll fix your credit, We'll clean up your credit report, Your score will go up because of us).",
+            "2. Do not flag if credit improvement is mentioned only as a result of completing the debt settlement program, without suggesting direct credit repair (e.g., Credit may improve after debts are settled).",
+            "3. General credit impact statements are fine as long as they don't imply credit repair services by the company."
+        ]
+    },
+    {
+        "issue_id": "8D06BBBF-E4A2-4DCE-A8B4-5A5C3BDC7E44",
+        "issue_code": "E104",
+        "issue_name": "Claim that we will have an attorney represent clients if anything happens",
+        "issue_description": "Falsely promises legal representation in the event of lawsuits or creditor actions, giving clients a false sense of legal protection. Note: We can refer an attorney to the client if they need that service, but legal representation is not included by default.",
+        "issue_check": [
+            "1. Flag if the speaker says or implies that the company automatically provides legal representation (e.g., for lawsuits, court, or creditor actions — We'll have an attorney represent you, Don't worry if you get sued—we have lawyers for that).",
+            "2. Do not flag if they clearly state the company can refer an attorney if the client requests or pays for it (e.g., We can connect you with an attorney, We work with partner attorneys you can talk to).",
+            "3. References to legal support/resources are fine as long as they don't imply included representation by default."
+        ]
+    },
+    {
+        "issue_id": "64BE3BF2-CEBC-4119-8AF5-D6B4A89FDB70",
+        "issue_code": "E106",
+        "issue_name": "Claim that we do not charge any fees",
+        "issue_description": "The salesperson falsely states or implies that the program is completely free or that the company does not charge any fees. In reality, legitimate debt settlement companies charge performance-based fees after successful settlements, as allowed by law. Misleading clients about fees can create trust issues and legal exposure.",
+        "issue_check": [
+            "1. Flag if the speaker says or implies that the program is free or that the client won't pay any fees (e.g., This won't cost you anything, We don't charge fees, It's 100% free).",
+            "2. Do not flag if they clearly state that fees are charged only after successful settlements, per legal guidelines (e.g., We only charge after settling a debt).",
+            "3. Statements about affordability or savings are fine as long as they don't hide or deny the existence of fees."
+        ]
+    },
+    {
+        "issue_id": "E848224C-36E6-47CC-874B-8C705F5F7DDF",
+        "issue_code": "E107",
+        "issue_name": "Claim that we will refund if clients are not happy",
+        "issue_description": "Promises full refunds or money-back guarantees without explaining the conditions or legal limitations of any refund policies.",
+        "issue_check": [
+            "1. Flag if the speaker says or implies that the client is guaranteed a full refund or can get their money back unconditionally, without mentioning any terms or limitations (e.g., You'll get all your money back if it doesn't work, Full money-back guarantee, no questions asked).",
+            "2. Do not flag if the speaker clearly explains the refund policy, including conditions, timing, or eligibility (e.g., Refunds are available if you cancel within 30 days, Subject to terms in the agreement).",
+            "3. It's acceptable to mention refunds or guarantees if a clear qualifier is included that indicates limitations or refers to official terms."
+        ]
+    },
+    {
+        "issue_id": "3EED1E76-C37F-4AA4-98BE-7335826A8921",
+        "issue_code": "E108",
+        "issue_name": "Claim that the client can cancel anytime without any issue",
+        "issue_description": "Oversimplifies or falsely states the cancellation process, failing to disclose possible fees, delays, or consequences of early program termination.",
+        "issue_check": [
+            "1. Flag if the speaker says or implies that the client can cancel the program instantly, easily, or without any consequences, without mentioning possible fees, delays, required steps, or the impact of early termination (e.g., You can cancel anytime, no problem, Just call us and you're out).",
+            "2. Do not flag if the speaker accurately explains the cancellation process, including required notice, potential fees, processing time, or consequences for settlement progress (e.g., You can cancel at any time, but there may be outstanding fees, Cancellation requires a written request and may take a few days to process).",
+            "3. General reassurances about flexibility or control are fine as long as they don't omit or obscure the actual cancellation terms or consequences."
+        ]
+    },
+    {
+        "issue_id": "9CACA6B3-B24D-41DF-B66E-34CE00F6EBAE",
+        "issue_code": "E109",
+        "issue_name": "Claim that the credit score won't be affected when enrolling into the program",
+        "issue_description": "Credit scores will be negatively affected upon enrollment in the program. While the score may improve later in the program—especially after settlements are reached or debts are fully paid—clients must be made aware of the initial impact.",
+        "issue_check": [
+            "1. Flag if the speaker says or implies that the program will not negatively affect the client's credit, or fails to mention the potential initial drop in credit score (e.g., This won't hurt your credit, Your score will be fine, or avoids answering when asked).",
+            "2. Do not flag if the speaker clearly explains that credit scores may decline at first due to missed payments or program structure, even if they mention that scores may improve later (e.g., Your score may drop initially, but could go up after debts are settled).",
+            "3. It is acceptable to mention potential long-term credit improvement as long as early credit risks are clearly disclosed."
+        ]
+    },
+    {
+        "issue_id": "FC23D257-5CF9-4C70-B813-34B25D6BA4A7",
+        "issue_code": "E110",
+        "issue_name": "Claim that enrolled accounts will be temporarily closed after or during the settlement",
+        "issue_description": "The salesperson falsely claims or suggests that enrolled accounts will only be closed temporarily and may be reopened after settlement. In reality, creditors typically close these accounts permanently, and continued use is not possible. This misleads clients about the long-term effect on their credit profile.",
+        "issue_check": [
+            "1. Flag if the speaker says or implies that enrolled accounts will be temporarily closed and may be reopened after settlement (e.g., Your account is just on pause, You might use the card again after we settle, It's not a permanent closure).",
+            "2. Do not flag if the speaker clearly states that accounts are permanently closed by creditors once enrolled and cannot be reused or reopened."
+        ]
+    },
+    {
+        "issue_id": "83E4C745-81F0-4DA5-955F-24639F36B301",
+        "issue_code": "E111",
+        "issue_name": "Claim that program will not affect client's military/security clearance",
+        "issue_description": "Clients with active military or security clearance may risk losing their clearance due to program enrollment. These individuals should be carefully assessed, and in many cases, enrollment should be avoided.",
+        "issue_check": [
+            "1. Flag if: The speaker enrolls or encourages enrollment of a client who has disclosed active military or security clearance without warning them of clearance-related risks.",
+            "2. Do not flag if: The speaker acknowledges the client's clearance and either discourages enrollment or clearly warns of the potential impact (e.g., This may affect your clearance)."
+        ]
+    },
+    {
+        "issue_id": "65830CD3-189E-4C05-84EB-30EBBDDD3575",
+        "issue_code": "E112",
+        "issue_name": "Claim that client can keep using the same bank who issued the enrolled credit cards",
+        "issue_description": "Using the same bank where enrolled credit cards were issued can interfere with settlement. Creditors may view account activity, potentially freeze funds, or assign higher settlement rates. Clients should be advised to move their banking to an unaffiliated institution.",
+        "issue_check": [
+            "1. Flag if: The speaker does not inform the client about the risks of keeping their bank with a creditor enrolled in the program, or suggests it's fine to continue using it (e.g., You can keep your bank, or no warning when the client mentions banking with an enrolled creditor).",
+            "2. Do not flag if: The speaker clearly advises the client to switch to an unaffiliated bank, explaining risks like fund freezes, creditor visibility, or negative settlement impact.",
+            "3. Do not flag if: The speaker gives general advice to use a new or separate account, as long as it includes a rationale that protects the client's financial position."
+        ]
+    },
+    {
+        "issue_id": "0F74736C-1652-4B85-9A59-C3E743EE7021",
+        "issue_code": "E113",
+        "issue_name": "Claim that the client won't get sued",
+        "issue_description": "Clients can be sued by creditors for non-payment or default. Even if a lawsuit is filed, we can still attempt to settle the account. However, we should never guarantee that lawsuits won't occur.",
+        "issue_check": [
+            "1. Flag if: The speaker says or suggests the client won't be sued or is protected from legal action (e.g., You won't get sued, They can't take you to court, We'll make sure that doesn't happen).",
+            "2. Do not flag if: The speaker admits lawsuits are possible and says the company can still help settle (e.g., Lawsuits can happen, but we'll still try to work things out, There's always a chance, but we can still negotiate).",
+            "3. Do not flag if: The speaker reassures without denying risk (e.g., We'll do our best to help, It's rare, but it can happen)."
+        ]
+    },
+    {
+        "issue_id": "D26703F1-1FF0-4623-A86E-5A67F03A1DD2",
+        "issue_code": "E114",
+        "issue_name": "Claim or accept an account with promotional interest or zero interest for enrollment",
+        "issue_description": "Accounts with promotional or 0% APR terms are generally ineligible for settlement until the promotional period expires. Enrolling them prematurely misleads the client and could disrupt program results.",
+        "issue_check": [
+            "1. Flag if: The speaker enrolls or encourages enrollment of 0% APR or promo-term accounts without saying they're usually ineligible until the promo ends (e.g., We can settle this now, with no mention of 0%).",
+            "2. Do not flag if: The speaker says these accounts must typically wait until the promo ends to be settled (e.g., We'll wait until your 0% period ends before settling)."
+        ]
+    },
+    {
+        "issue_id": "8E6DFD91-1673-473E-8412-DA563A222741",
+        "issue_code": "E115",
+        "issue_name": "Claim or accept secured debt to the program",
+        "issue_description": "Includes debts backed by collateral (e.g., car loans, mortgages), which are not eligible for debt settlement. These should never be accepted into the program.",
+        "issue_check": [
+            "1. Flag if: The speaker says or suggests that secured debts (e.g., car loans, mortgages) can be enrolled (e.g., We can settle your auto loan, We'll handle your mortgage).",
+            "2. Do not flag if: The speaker clearly says secured debts aren't eligible and only unsecured debts (e.g., credit cards) qualify.",
+            "3. Do not flag if: Secured debts are discussed for clarity, as long as it's clear they're excluded."
+        ]
+    },
+    {
+        "issue_id": "1CBF3FAB-18DA-43C6-AF24-2DB1054E9C1A",
+        "issue_code": "E116",
+        "issue_name": "Claim that the program does not require the client's active engagement and responsiveness",
+        "issue_description": "Falsely assures clients that the program is hands-off. In reality, clients must remain engaged to approve settlements, respond to communications, and make payments. These interactions are necessary to achieve successful debt resolution.",
+        "issue_check": [
+            "1. Flag if: The speaker says or suggests the program is fully hands-off and the client won't need to do anything (e.g., We'll handle everything, You can just relax).",
+            "2. Do not flag if: The speaker explains the client must stay involved—approve settlements, respond to messages, and make payments (e.g., We'll do most of the work, but you'll still need to approve offers).",
+            "3. Do not flag if: The speaker reassures the client, as long as they don't downplay the need for client involvement."
+        ]
+    },
+    {
+        "issue_id": "8CAEA4BE-FEDA-4848-B808-C95BAF789BE1",
+        "issue_code": "E117",
+        "issue_name": "Failure to disclose that the client owns and controls the dedicated account",
+        "issue_description": "We do not own or control the dedicated account holding the client's funds. The client retains full control, and all transactions in or out of the account must be client-authorized.",
+        "issue_check": [
+            "1. Flag if: The speaker says or suggests the company controls, owns, or can move funds from the dedicated account without client approval (e.g., We'll manage your funds, We'll handle payments directly).",
+            "2. Do not flag if: The speaker clearly states the client owns and controls the account, and all transactions need their approval (e.g., Only you can approve payments, You have full control).",
+            "3. Do not flag if: The speaker refers to the account generally, as long as they don't misrepresent ownership or imply company access."
+        ]
+    },
+    {
+        "issue_id": "132546F5-A918-48A3-BB17-B996D47AECFA",
+        "issue_code": "E118",
+        "issue_name": "Claim that we have full control over client's dedicated account",
+        "issue_description": "Falsely suggests that we can manage or move funds in the client's dedicated account without their permission. Every transaction must be authorized by the client, and this must be clearly communicated.",
+        "issue_check": [
+            "1. Flag if: The speaker says or suggests the company can access or move funds in the client's dedicated account without their approval (e.g., We'll move the money, We control the account to pay creditors).",
+            "2. Do not flag if: The speaker clearly says only the client can authorize transactions and the company has no independent control (e.g., You approve all transfers, We guide, but you authorize).",
+            "3. Do not flag if: The account is discussed generally, as long as it's clear client permission is required for all fund movements."
+        ]
+    },
+    {
+        "issue_id": "191EE51F-CE52-438D-90D0-AF77A7114799",
+        "issue_code": "E119",
+        "issue_name": "Salesperson did not go through budgeting with client",
+        "issue_description": "Budgeting must be reviewed with each client—including rent, utilities, car payments, groceries, etc.—to determine program suitability and demonstrate financial hardship to creditors during settlement negotiations.",
+        "issue_check": [
+            "1. Flag if: The speaker skips budgeting or fails to ask about key living expenses like rent, utilities, transportation, or groceries before moving forward.",
+            "2. Do not flag if: The speaker reviews the client's budget to assess affordability or confirms it was completed earlier.",
+            "3. Do not flag if: The budgeting discussion is brief but covers all critical expense categories needed to show financial hardship."
+        ]
+    }
+]

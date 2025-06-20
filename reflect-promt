@@ -1,0 +1,15 @@
+You are an evaluator. You are given:
+
+1. A claim made by a user.
+2. A bot-generated response
+3. Converstation context
+
+Your task is to evaluate whether the bot’s response correctly supports or reflects the user’s claim. Reply only “Yes” if it clearly and accurately supports the claim, or “No” if it does not reflect, contradicts, or misses the claim.
+
+Provide your evaluation in this format:
+Yes / No
+
+Claim: "<INSERT_CLAIM_HERE>"
+Bot's response: "<INSERT_Error_HERE>"
+
+Conversation Context :INSERT_CONTEXT_HERE

@@ -17,7 +17,8 @@ class ReportingService:
         config = configparser.ConfigParser()
         config.read(config_file_path)
         self.make_webhook = config["MAKE"]["WEBHOOK"]
-        self.make_blank_call_webhook = config["MAKE"]["BLANK_CALL_WEBHOOK"]
+        # self.make_blank_call_webhook = config["MAKE"]["BLANK_CALL_WEBHOOK"]
+
     def _getTodayTime(self):
         utc_now = datetime.datetime.now(pytz.utc)
         pdt_timezone = pytz.timezone("America/Los_Angeles")
@@ -113,11 +114,7 @@ class ReportingService:
         #     s3_file_name=f"{file_name}", local_file_path=rf"{file_path}"
         # )
 
-        caption = (
-            "Result : ✅ True" + "\n"
-            if recording.success
-            else "Result : ❌ False" + "\n"
-        )
+        caption = "Result : ✅ True" + "\n" if recording.success else "Result : ❌ False" + "\n"
 
         caption += f"Date uploaded : {recording.document_uploaded_at}" + "\n\n"
         caption += f"Sales employee : {recording.sale_employee_name}" + "\n"
@@ -134,9 +131,7 @@ class ReportingService:
                 if "error_reference" in error and error["error_reference"]
                 else ""
             )
-            caption += (
-                f"{times} - {error['error_code']} - {error['error_message']}" + "\n"
-            )
+            caption += f"{times} - {error['error_code']} - {error['error_message']}" + "\n"
             count += 1
             if count % 4 == 0:
                 caption += "\n"
@@ -158,14 +153,13 @@ class ReportingService:
             "error_list": (
                 [
                     {
-                        "error_code": f"{error['error_code']}:{error['error_message']}".replace(
-                            "'", ""
-                        ),
+                        "error_code": f"{error['error_code']}:{error['error_message']}".replace("'", ""),
                         "error_reference": ref["time_occurred"]
                         + " - "
                         + ref["entity"]
                         + " - "
                         + ref["detail"].replace("'", ""),
+                        "reflect_result": error["reflect_result"],
                     }
                     for error in recording.error_code_list
                     for ref in error.get("error_reference", [])
@@ -191,16 +185,11 @@ class ReportingService:
             )
 
             if response.status_code != 200:
-                raise Exception(
-                    f"Sending report to make.com failed with code {response.status_code}"
-                )
+                raise Exception(f"Sending report to make.com failed with code {response.status_code}")
 
-            print(
-                f"Successfully sent report to make.com for document: {recording.document_name}"
-            )
+            print(f"Successfully sent report to make.com for document: {recording.document_name}")
         except requests.exceptions.RequestException as e:
             print(f"Error sending report to make.com: {str(e)}")
-
 
     # ********************************************************************************************************
     # Push to make.com report
@@ -239,12 +228,8 @@ class ReportingService:
             )
 
             if response.status_code != 200:
-                raise Exception(
-                    f"Sending report to make.com failed with code {response.status_code}"
-                )
+                raise Exception(f"Sending report to make.com failed with code {response.status_code}")
 
-            print(
-                f"Successfully sent report to make.com for document: {recording.document_name}"
-            )
+            print(f"Successfully sent report to make.com for document: {recording.document_name}")
         except requests.exceptions.RequestException as e:
             print(f"Error sending report to make.com: {str(e)}")
