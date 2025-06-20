@@ -5,6 +5,7 @@ from common import FolderNames, Utility
 import datetime
 from time import sleep
 from models import RecordingModel
+from mongo_service import MongoService
 from openai import OpenAI
 from os import listdir, path
 import json
@@ -68,17 +69,99 @@ class GPTService:
                     "role": "system",
                     "content": (
                         """
-# Compliance Content Filter
-
 ## Role
-You are a compliance content filter analyzing sales conversations.
+
+You are a sales recording auditor for a debt settlement company named """
+                        + recording.company_name
+                        + """
+
+## Goal
+
+Your task is to audit a transcript of a conversation between a salesperson and a
+client to determine whether the salesperson has violated any company rules, using
+the provided list of error codes and rule descriptions.
+
+You must:
+
+- Evaluate the transcript **against each rule independently**, one by one.
+- Detect **every instance** of a rule violation, even if **repeated**,
+  **paraphrased**, or **indirectly implied**.
+- Flag any part of the transcript that **matches, implies, or fails to disclose** required information per the rules.
+- Always include **all occurrences** of each violation, even if they happen multiple times during the call.
 
 ## Input
-A transcript of a conversation between a salesperson and a client.
 
-## Process
-1. Read the entire conversation
-2. Check for violations of the following rules:
+A transcript of a conversation between a salesperson and a client. Each line
+includes:
+
+- `timestamp` in seconds (e.g. 125),
+- `speaker` (either "salesperson" or "client"),
+- `text` (spoken dialogue).
+
+## Preprocessing Step (REQUIRED)
+
+Before applying the rules, perform an **initial scan of the transcript** to detect
+high-risk keywords and phrases such as:
+
+- “bailout”, “federal”, “relief fund”, “state program”
+- “your score will go up”, “we’ll repair your credit”, “it won’t hurt your credit”
+- “we’ll loan you money”, “we give you a loan”
+- “you won’t get sued”, “you don’t have to do anything”, “you’ll get a refund if unhappy”
+- “use your same bank”, “we control the account”
+
+These are often signs of hidden or indirect violations and must be carefully
+checked against the rules, even if phrased differently.
+
+## Output Format
+
+Respond **only** with a JSON object in one of the following formats. **No
+explanation, commentary, or extra text is allowed.**
+
+### If violations are found:
+
+{
+"status": "false",
+"is_sale_recording": "true",
+"error_code_list": [
+{
+"error_code": "<error code from the list>",
+"error_message": "<exact rule from the list>",
+"error_reference": [
+{
+"time_occurred": "HH:mm", # Convert timestamp to HH:mm (e.g. 645 =>
+"10:45")
+"entity": "<client or salesperson>",
+"detail": "<verbatim or clear paraphrased quote from transcript showing the
+violation>"
+}
+// Repeat if same error occurs multiple times
+]
+}
+
+// Repeat block for each unique rule violated
+]
+}
+
+- If the same rule is violated multiple times, **include each occurrence** in separate entries under `"error_reference"` for that rule.
+
+### If no violations are found:
+
+{
+"status": "success",
+"is_sale_recording": "true",
+"error_code_list": []
+}
+
+## Evaluation Rules
+
+You must use the provided list of error codes and associated rules to detect
+violations. When checking each rule:
+
+- **Do not skip** any rule. Evaluate every rule against the entire transcript.
+- **Always flag** if a rule is violated more than once — include each instance.
+- **Include indirect or suggestive language** (e.g., “bailout” implies government = E100).
+- **Flag silence or failure to warn** when disclosure is required (e.g., credit damage not explained = E109).
+- **Err on the side of inclusion**: better to include a possible violation than to miss a real one.
 
 ### Error Codes and Rules
 """
@@ -89,35 +172,6 @@ A transcript of a conversation between a salesperson and a client.
                         + str(recording.weight_percentage)
                         + """
   1. We want to avoid quoting unrealistic settlement percentage to the client, the percentage is already pre-calculated and that is the best percetange we can archieve for the client.
-
-## Output Format
-You must respond **only** with a JSON object in one of the following formats. **No additional explanation, notes, or text is allowed.**
-
-### If violations are found:
-{
-    "status": "false", 
-    "is_sale_recording": "true",
-    "error_code_list": [
-        {
-            "error_code": "<error code from the list>",
-            "error_message": "<exact rule from the list>", 
-            "error_reference": [
-                {   
-                    "time_occurred": "HH:mm",  // Convert start_time when violation first occurred from seconds to HH:mm format
-                    "entity": "<have to be client or salesperson>",
-                    "detail": "<exact quote from transcript>"
-                }
-            ]
-        }
-    ]
-}
-
-### If no violations are found:
-{
-    "status": "success",
-    "is_sale_recording": "true",
-    "error_code_list": []
-}
 
 """
                     ),
@@ -243,6 +297,43 @@ You must respond **only** with a JSON object in one of the following formats. **
         return response.choices[0].message.content
 
     # ********************************************************************************************************
+    # Reflect Error
+    # ********************************************************************************************************
+    def reflect_error(self, claim: str, bot_response: str, conversation_context: str):
+
+        # Send request to GPT-4
+        response = self.client.chat.completions.create(
+            model=self.MODEL_NAME,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        """
+                        You are an evaluator. You are given:
+
+                        1. A claim made by a user.
+                        2. A bot-generated response
+                        3. Converstation context
+
+                        Your task is to evaluate whether the bot’s response correctly supports or reflects the user’s claim. Reply only “Yes” if it clearly and accurately supports the claim, or “No” if it does not reflect, contradicts, or misses the claim.
+
+                        Provide your evaluation in this format:
+                        Yes / No """
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": f"Claim:' {claim}' \n Bot's response: '{bot_response}' \n Conversation Context: '{conversation_context}'",
+                },
+            ],
+            max_tokens=200,
+            temperature=0,
+            top_p=1,
+        )
+
+        return response.choices[0].message.content
+
+    # ********************************************************************************************************
     # Split JSON List
     # ********************************************************************************************************
     def _split_json_list(self, data_list, chunk_size):
@@ -276,6 +367,17 @@ You must respond **only** with a JSON object in one of the following formats. **
             list: Updated error code list
         """
         for new_error in new_errors:
+            # Check if error_reference has multiple items
+            if len(new_error["error_reference"]) > 1:
+                # Create separate error entries for each reference
+                for ref in new_error["error_reference"]:
+                    new_error_entry = {
+                        "error_code": new_error["error_code"],
+                        "error_message": new_error["error_message"],
+                        "error_reference": [ref],  # Single reference per entry
+                    }
+                    error_code_list.append(new_error_entry)
+
             # Flag to check if this error time already exists
             is_duplicate = False
 
@@ -300,6 +402,10 @@ You must respond **only** with a JSON object in one of the following formats. **
     # Process
     # ********************************************************************************************************
     def process(self, recording: RecordingModel, general_error_list: str):
+
+        # ********  init mongo service
+        self.mongo_service = MongoService(config_file="config.ini", config_name="AI_SALE_GENERAL_ERROR_LIST")
+
         FILENAME = path.join(
             self.current_folder,
             f"{FolderNames.TRANSCRIPT.value}/{Utility.remove_audio_extension(recording.document_name)}.txt",
@@ -309,9 +415,7 @@ You must respond **only** with a JSON object in one of the following formats. **
             data = file.readlines()
 
         # ********  save transcript
-        recording.transcript = base64.b64encode("".join(data).encode("utf-8")).decode(
-            "utf-8"
-        )
+        recording.transcript = base64.b64encode("".join(data).encode("utf-8")).decode("utf-8")
 
         # ********  split transcript
         data_array = [line.strip() for line in data]
@@ -347,21 +451,39 @@ You must respond **only** with a JSON object in one of the following formats. **
         if isinstance(data_array, list):
             for idx, chunk in enumerate(self._split_json_list(data_array, chunk_size)):
                 print(f"Handle chunk {idx + 1} for file {FILENAME}...")
-                summary = self.audit_with_gpt(
-                    chunk, recording, general_error_list, summary
-                )
-                print(
-                    f"Update summary after chunk {idx + 1} for file {FILENAME}:\n{summary}\n"
-                )
+                summary = self.audit_with_gpt(chunk, recording, general_error_list, summary)
+                print(f"Update summary after chunk {idx + 1} for file {FILENAME}:\n{summary}\n")
                 sale_result = json.loads(Utility.edit_gpt_response(summary))
 
                 # ********  append error code list
                 if sale_result["status"] == "false":
-                    error_code_list = self._append_error_codes(
-                        error_code_list, sale_result["error_code_list"]
-                    )
+                    error_code_list = self._append_error_codes(error_code_list, sale_result["error_code_list"])
         else:
             print(f"Data format not supported for rolling summary of file {FILENAME}.")
+        # endregion sale recording
+
+        # ********  reflect error
+
+        # region reflect error
+        for error in error_code_list:
+            issue_code = error["error_code"]
+            claim = (
+                issue_code
+                + f": {error['error_message']}"
+                + "\n"
+                + "\n".join(self.mongo_service.find_error_list_by_code(issue_code)["issue_check"])
+            )
+
+            conversation_context = Utility.extract_conversation_segment(
+                error["error_reference"][0]["time_occurred"], data
+            )
+
+            bot_response = error["error_reference"][0]["time_occurred"] + ": " + error["error_reference"][0]["detail"]
+
+            reflect_result = self.reflect_error(claim, bot_response, conversation_context)
+            error["reflect_result"] = reflect_result
+
+        # endregion reflect error
 
         # ********  return result
         print(f"Handle file {FILENAME} has been completed!")
@@ -380,5 +502,3 @@ You must respond **only** with a JSON object in one of the following formats. **
                 "error_code_list": [],
             }
             return json.dumps(success_result)
-
-        # endregion sale recording

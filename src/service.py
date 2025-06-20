@@ -6,8 +6,10 @@ from datetime import datetime, timedelta, timezone
 import re
 import json
 import pytz
+import base64
 
 # ******* Project Imports
+from common import FolderNames, Utility
 from constant import TRANSACTION_CODES
 from gpt_service import GPTService
 from crm_api_service import CrmAPIService
@@ -17,6 +19,8 @@ from reporting_service import ReportingService
 from transcribe_service import TranscribeService
 from validation_service import ValidationService
 from sqlconnect import SqlConnect
+from mongo_service import MongoService
+
 
 class AISaleService:
     def __init__(self):
@@ -47,9 +51,9 @@ class AISaleService:
                 prompt += f"  {check.format(assign_company='Citizen Debt Services')}\n"
 
         return prompt
-    
+
     # ********************************************************************************************************
-    # Get Recordings With SQL 
+    # Get Recordings With SQL
     # ********************************************************************************************************
     def get_recordings_with_sql(
         self,
@@ -58,7 +62,7 @@ class AISaleService:
         to_date_time: datetime,
     ):
         """Get tasks from start_date to end_date"""
-        
+
         SQL = """SELECT
                     Documents.Name As DocumentName,
                     Documents.DocumentId As DocumentId,
@@ -94,7 +98,7 @@ class AISaleService:
                     AND Documents.Category = 'ce25a439-86de-48c0-aebb-18de5d46ea61'
                     AND Documents.CreatedAt >= ?
                 """
-        
+
         fetch_data = self.sql_service.fetchall(SQL, [from_date_time])
 
         for data in fetch_data:
@@ -136,7 +140,18 @@ class AISaleService:
             )
         print("Total Tasks: ", len(Recordings.batch))
 
-    
+    # # ********************************************************************************************************
+    # # Get General Error List
+    # # ********************************************************************************************************
+    # def _get_general_error_list(self):
+    #     prompt = ""
+    #     general_error_list = self.ai_sale_general_error_list.collection.find()
+    #     for error in general_error_list:
+    #         prompt += f"- {error['issue_code']}: {error['issue_name']}\n"
+    #         for check in error["issue_check"]:
+    #             prompt += f"{check}\n"
+    #         prompt += "\n\n"
+    #     return prompt
 
     # ********************************************************************************************************
     # Process
@@ -156,20 +171,17 @@ class AISaleService:
             config_name="AI_SALE_LOGS",
         )
 
-        self.ai_sale_general_error_list = MongoConnect(
+        # ********  Init Mongo Service
+        self.mongo_service = MongoService(
             config_file="config.ini",
             config_name="AI_SALE_GENERAL_ERROR_LIST",
         )
 
         # ********  Init transcription Service
-        self.transcribe_service = TranscribeService(
-            config_file="config.ini", config_name="AWS"
-        )
+        self.transcribe_service = TranscribeService(config_file="config.ini", config_name="AWS")
 
         # ********  Init CRM API Service
-        self.crm_api_service = CrmAPIService(
-            config_file="config.ini", config_name="CRM"
-        )
+        self.crm_api_service = CrmAPIService(config_file="config.ini", config_name="CRM")
 
         # ********  Init Validation Service
         self.validation_service = ValidationService()
@@ -181,9 +193,7 @@ class AISaleService:
         self.reporting_service = ReportingService()
 
         # ********  Init SQL
-        self.sql_service = SqlConnect(
-            config_file="config.ini", config_name="SQL_NEW"
-        )
+        self.sql_service = SqlConnect(config_file="config.ini", config_name="SQL_NEW")
         self.sql_service.init()
 
         # ********  Init batch model
@@ -207,21 +217,15 @@ class AISaleService:
     # ********************************************************************************************************
     def handling(self, recording: RecordingModel, general_error_list: str):
         # ********  Check existing in mongo
-        if self.ai_sale_logs.collection.find_one(
-            {"document_id": recording.document_id}
-        ):
+        if self.ai_sale_logs.collection.find_one({"document_id": recording.document_id}):
             return self.TRANS_CODE.GENERAL.ERROR_CODE.X100
 
         # ******** validate audio file
-        if not self.validation_service.valid_audio_file(
-            file_path=recording.document_name
-        ):
+        if not self.validation_service.valid_audio_file(file_path=recording.document_name):
             return self.TRANS_CODE.GENERAL.ERROR_CODE.F101
 
         # ********  Get Recording URL
-        recording.recording_url = self.crm_api_service.get_recordings_url(
-            document_id=recording.document_id
-        )
+        recording.recording_url = self.crm_api_service.get_recordings_url(document_id=recording.document_id)
 
         # ********  Download Recording
         self.crm_api_service.download_recording(recording=recording)
@@ -230,14 +234,10 @@ class AISaleService:
         self.transcribe_service.process(recording=recording)
 
         # ********  Calculate Weight Percentage
-        recording.weight_percentage = self.crm_api_service.calculate_weight_percentage(
-            profile_id=recording.profile_id
-        )
+        recording.weight_percentage = self.crm_api_service.calculate_weight_percentage(profile_id=recording.profile_id)
 
         # ********  GPT process
-        gpt_response = self.gpt_service.process(
-            recording=recording, general_error_list=general_error_list
-        )
+        gpt_response = self.gpt_service.process(recording=recording, general_error_list=general_error_list)
 
         gpt_response = json.loads(gpt_response)
 
@@ -280,19 +280,15 @@ class AISaleService:
     # ********************************************************************************************************
     def handleTask(self, recordings: RecordingBatchModel):
         # ********  Get General Error List
-        general_error_list = self._get_general_error_list()
+        general_error_list = self.mongo_service.get_general_error_list()
 
         for recording in recordings.batch:
 
             # ********  Handling
-            Action = self.handling(
-                recording=recording, general_error_list=general_error_list
-            )
+            Action = self.handling(recording=recording, general_error_list=general_error_list)
 
             # get profile info
-            profile_info = self.crm_api_service.get_profile_info(
-                profile_id=recording.profile_id
-            )
+            profile_info = self.crm_api_service.get_profile_info(profile_id=recording.profile_id)
             recording.profile_status = profile_info["statusName"]
             recording.enrolled_date = profile_info["enrolledDate"]
 
@@ -308,7 +304,7 @@ class AISaleService:
                 # Log and report error
                 self.reporting_service.push_blank_call_to_make_report(recording=recording)
                 self.reporting_service.push_to_make_report(recording=recording)
-                
+
             elif Action != self.TRANS_CODE.GENERAL.ERROR_CODE.X100:
                 # Send to Gchat for other cases except X100
                 self.reporting_service.push_blank_call_to_make_report(recording=recording)
@@ -336,18 +332,19 @@ class AISaleService:
             config_name="AI_SALE_LOGS",
         )
 
-        self.ai_sale_general_error_list = MongoConnect(
+        self.mongo_service = MongoService(
             config_file="config.ini",
             config_name="AI_SALE_GENERAL_ERROR_LIST",
         )
+
         # ********  Init Reporting Service
         self.reporting_service = ReportingService()
 
-        general_error_list = self._get_general_error_list()
+        general_error_list = self.mongo_service.get_general_error_list()
 
         # Create a recording model with the content
         recording = RecordingModel(
-            document_name="7823615724d81e942492e34c9da6b27f9de65bd82735748.mp3",
+            document_name="6337592372aa2f6b46ac744dba8412f904fff924e295523.mp3",
             document_id="",
             document_title="",
             profile_id="",
@@ -369,12 +366,20 @@ class AISaleService:
             recording_url="",
             file_extension="",
         )
+        # get document from mongo by document_id
+        document = self.ai_sale_logs.collection.find_one({"document_name": recording.document_name})
+        decoded_transcript = base64.b64decode(document["transcript"]).decode("utf-8")
+        # write transcript to file
+        transcript_path = os.path.join(
+            self.current_folder,
+            f"{FolderNames.TRANSCRIPT.value}/{Utility.remove_audio_extension(recording.document_name)}.txt",
+        )
+        with open(transcript_path, "w", encoding="utf-8") as f:
+            f.write(decoded_transcript)
 
         # Process with GPT
         self.gpt_service = GPTService(config_file="config.ini", config_name="OPENAI")
-        gpt_response = self.gpt_service.process(
-            recording=recording, general_error_list=general_error_list
-        )
+        gpt_response = self.gpt_service.process(recording=recording, general_error_list=general_error_list)
         gpt_response = json.loads(gpt_response)
 
         # Print results
@@ -390,16 +395,12 @@ class AISaleService:
         #     "====================================================================================\n"
         # )
 
-        # get document from mongo by document_id
-        document = self.ai_sale_logs.collection.find_one(
-            {"document_name": recording.document_name}
-        )
-        document["error_code_list"] = gpt_response["error_code_list"]
-        document["recording_url"] = ""
-        document["recording_file_path"] = ""
-        document["file_extension"] = ""
-        document_final = RecordingModel(**document)
+        # document["error_code_list"] = gpt_response["error_code_list"]
+        # document["recording_url"] = ""
+        # document["recording_file_path"] = ""
+        # document["file_extension"] = ""
+        # document_final = RecordingModel(**document)
 
-        self.reporting_service.push_to_make_report(recording=document_final)
+        self.reporting_service.push_to_make_report(recording=recording)
 
         return True

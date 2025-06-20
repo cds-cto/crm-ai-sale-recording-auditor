@@ -26,7 +26,7 @@ def main():
 
 # main
 if __name__ == "__main__":
-    # debugpy.listen(("0.0.0.0", 5678))
-    # debugpy.wait_for_client()
+    debugpy.listen(("0.0.0.0", 5678))
+    debugpy.wait_for_client()
     # breakpoint()
     main()

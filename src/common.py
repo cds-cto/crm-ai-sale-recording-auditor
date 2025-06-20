@@ -1,4 +1,6 @@
 from enum import Enum
+from datetime import datetime, timedelta
+import re
 
 ######################## CONSTANTS ID ########################
 CONTACT_ID = {
@@ -58,6 +60,56 @@ class Utility:
         Returns:
             str: Cleaned response string
         """
-        return (
-            response.replace("\n", "").replace("```json", "").replace("```", "").strip()
-        )
+        return response.replace("\n", "").replace("```json", "").replace("```", "").strip()
+
+    @staticmethod
+    def extract_conversation_segment(timestamp_str: str, conversation_array: list, time_window_minutes: int = 5) -> str:
+        """
+        Extract conversation segment around a given timestamp within a time window.
+
+        Args:
+            timestamp_str (str): Timestamp in format "MM:SS" (e.g., "15:36")
+            conversation_array (list): Full conversation array with timestamps
+            time_window_minutes (int): Time window in minutes before and after (default: 5)
+
+        Returns:
+            str: Extracted conversation segment within the time window
+        """
+        # try:
+        # Parse the target timestamp (MM:SS format)
+        minutes, seconds = map(int, timestamp_str.split(":"))
+        target_seconds = minutes * 60 + seconds
+
+        # Calculate time boundaries in seconds
+        start_seconds = target_seconds - (time_window_minutes * 60)
+        end_seconds = target_seconds + (time_window_minutes * 60)
+
+        # Split conversation into lines
+        lines = conversation_array
+        extracted_lines = []
+
+        for line in lines:
+            # Look for timestamp pattern in the line
+            # Pattern: [seconds-seconds] or MM:SS format
+            timestamp_match = re.search(r"\[(\d+\.?\d*)-(\d+\.?\d*)\]|(\d{1,2}:\d{2})", line)
+
+            if timestamp_match:
+                if timestamp_match.group(3):  # MM:SS format
+                    line_minutes, line_seconds = map(int, timestamp_match.group(3).split(":"))
+                    line_total_seconds = line_minutes * 60 + line_seconds
+                else:  # Convert seconds to total seconds
+                    line_total_seconds = float(timestamp_match.group(1))
+
+                # Check if line is within time window
+                if start_seconds <= line_total_seconds <= end_seconds:
+                    extracted_lines.append(line)
+            else:
+                # If no timestamp found, include line if we're already collecting
+                if extracted_lines:
+                    extracted_lines.append(line)
+
+        return "\n".join(extracted_lines)
+
+        # except Exception as e:
+        #     print(f"Error extracting conversation segment: {e}")
+        #     return ""

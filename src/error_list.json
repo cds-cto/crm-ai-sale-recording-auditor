@@ -93,9 +93,10 @@
         "issue_name": "Claim that the credit score won't be affected when enrolling into the program",
         "issue_description": "Credit scores will be negatively affected upon enrollment in the program. While the score may improve later in the program—especially after settlements are reached or debts are fully paid—clients must be made aware of the initial impact.",
         "issue_check": [
-            "1. Flag if the speaker says or implies that the program will not harm the client's credit score, or if they fail to mention any potential negative credit impact early in the program (e.g. This won't hurt your credit, Your credit score will be fine, or silence on the issue when asked).",
-            "2. Do not flag if the speaker clearly communicates that credit scores may decline initially due to missed payments or program structure, even if they mention the possibility of improvement later (e.g. Your score may drop at first, but could improve after settlements).",
-            "3. It is acceptable to discuss potential long-term credit improvement as long as the short-term risks are disclosed honestly"
+            "1. Flag if the speaker states or implies that enrolling in the program will not negatively affect the client’s credit score (e.g., This won't hurt your credit, Your credit score will be fine), or if they fail to mention any short-term credit impact when directly asked.",
+            "2. Do NOT flag if the speaker truthfully explains that the client has already been impacted and the  program is not introducing new credit damage — as long as this is not used to downplay or skip disclosure of the initial credit impact.",
+            "3. Do NOT flag if the speaker clearly explains that credit scores may temporarily decline at the  beginning of the program due to missed payments or the nature of the program — even if long-term credit improvement is also discussed.",
+            "4. Do NOT flag if the speaker discusses potential long-term credit score improvements as long as short-term risks are disclosed clearly and transparently."
         ]
     },
     {
@@ -135,9 +136,9 @@
         "issue_name": "Claim that the client won't get sued",
         "issue_description": "Clients can be sued by creditors for non-payment or default. Even if a lawsuit is filed, we can still attempt to settle the account. However, we should never guarantee that lawsuits won't occur.",
         "issue_check": [
-            "1. Flag if the speaker says or implies that creditors won't sue the client, or guarantees protection from legal action (e.g. You won't get sued, They can't take you to court, We'll make sure no lawsuits happen).",
-            "2. Do not flag if the speaker clearly acknowledges that lawsuits are possible and explains that the company can still attempt to negotiate or settle accounts even if legal action occurs (e.g. There's always a risk of legal action, but we can still work on settling the debt).",
-            "3. Reassuring the client is acceptable as long as it does not guarantee lawsuit prevention or misrepresent the legal risk."
+            "1. Flag if the speaker guarantees that the client won’t be sued, or won’t face legal actions like garnishment — especially with absolute claims (e.g., You won’t get sued, They can’t garnish your wages, This prevents lawsuits entirely).",
+            "2. Do not flag if the speaker uses non-absolute or qualified phrases (e.g., decrease the chances of garnishment, may help avoid legal action) or mentions “legal protection” as part of a general benefit **without guaranteeing protection**.",
+            "3. Also do not flag if the speaker acknowledges lawsuits or garnishment are still possible and explains the company will attempt to negotiate or settle."
         ]
     },
     {
@@ -167,9 +168,12 @@
         "issue_name": "Claim that the program does not require the client's active engagement and responsiveness",
         "issue_description": "Falsely assures clients that the program is hands-off. In reality, clients must remain engaged to approve settlements, respond to communications, and make payments. These interactions are necessary to achieve successful debt resolution.",
         "issue_check": [
-            "1. Flag if the speaker says or implies that the client doesn't need to do anything during the program, or that the process is entirely hands-off (e.g. We'll handle everything—you don't have to worry about a thing, You can just sit back and relax once you enroll).",
+            "1. Flag if the speaker says or clearly implies that the client doesn't need to do anything during the program, or that the process is entirely hands-off. (e.g. We'll handle everything—you don't have to worry about a thing, You can just sit back and relax once you enroll, You won’t need to do anything).",
             "2. Do not flag if the speaker correctly explains that client participation is essential—for approving settlements, responding to communications, and making scheduled deposits or payments (e.g. We'll do most of the work, but you'll still need to review and approve offers).",
-            "3. It is acceptable to reassure clients that the process is guided and supported, as long as the need for their involvement is not minimized or ignored."
+            "3. Do not flag if the speaker reassures the client by offering help, support, or reducing stress (e.g. “We’ll take care of it for you, don’t worry.”), unless they explicitly state that the client has no responsibilities.",
+            "4. Do not flag if the speaker uses supportive language (e.g. “we’ll handle the settlements,” “we’ll get them settled for less”) to describe the services provided, without implying the client is passive or has no role.",
+            "5. Do not flag if the speaker explains financial or procedural aspects of the program (e.g. monthly payments, settlement amounts, debt reduction) in a way that highlights benefits, but does not suggest zero client involvement..",
+            "6. Do not flag if the speaker reassures the client that the process is guided and supported, as long as the need for their involvement is not minimized or ignored."
         ]
     },
     {
