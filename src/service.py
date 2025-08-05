@@ -17,6 +17,8 @@ from reporting_service import ReportingService
 from transcribe_service import TranscribeService
 from validation_service import ValidationService
 from sqlconnect import SqlConnect
+from auditor_service import AuditorService
+
 
 class AISaleService:
     def __init__(self):
@@ -47,9 +49,9 @@ class AISaleService:
                 prompt += f"  {check.format(assign_company='Citizen Debt Services')}\n"
 
         return prompt
-    
+
     # ********************************************************************************************************
-    # Get Recordings With SQL 
+    # Get Recordings With SQL
     # ********************************************************************************************************
     def get_recordings_with_sql(
         self,
@@ -58,7 +60,7 @@ class AISaleService:
         to_date_time: datetime,
     ):
         """Get tasks from start_date to end_date"""
-        
+
         SQL = """SELECT
                     Documents.Name As DocumentName,
                     Documents.DocumentId As DocumentId,
@@ -72,11 +74,14 @@ class AISaleService:
                     documentupload.EmployeeId As DocumentUploadedById,
                     documentupload.Alias As DocumentUploadedByName,
                     DATEADD(HOUR, -7, Documents.CreatedAt) As DocumentUploadedAt,
-                    Profiles.SubmittedDate
+                    Profiles.SubmittedDate,
+                    Enrollments.TotalBalance,
+                    Enrollments.EnrollmentFee
 
 
 
                 FROM Documents
+                    LEFT JOIN Enrollments ON Enrollments.ProfileId = Documents.ProfileId
                     LEFT JOIN Profiles ON Documents.ProfileId = Profiles.ProfileId
                     LEFT JOIN ProfileAssignees ON Profiles.ProfileId = ProfileAssignees.ProfileId
                         AND ProfileAssignees.AssigneeId = '028F546A-0429-4C9A-B50D-436BFA655075'
@@ -88,13 +93,13 @@ class AISaleService:
                     LEFT JOIN ProfileAdditionalStatuses WCStatus ON Profiles.ProfileId = WCStatus.ProfileId
                         AND WCStatus.AdditionalStatusId = 'E390DAEA-B84B-42A7-B95B-FE1FAC50F7C3'
                 WHERE Companies.Type = 1
-                    AND Profiles.Status = 1
+                    AND Profiles.Status in (1)
                     AND RecordingStatus.Value = 'Uploaded'
-                    AND WCStatus.Value = 'COMPLETED'
                     AND Documents.Category = 'ce25a439-86de-48c0-aebb-18de5d46ea61'
                     AND Documents.CreatedAt >= ?
+
                 """
-        
+
         fetch_data = self.sql_service.fetchall(SQL, [from_date_time])
 
         for data in fetch_data:
@@ -111,6 +116,8 @@ class AISaleService:
             document_uploaded_by_name = data[10]
             document_uploaded_at = data[11]
             submitted_date = data[12]
+            total_enrolled_balance = data[13]
+            enrollment_fee_percentage = data[14]
             Recordings.batch.append(
                 RecordingModel(
                     document_name=document_name,
@@ -132,11 +139,11 @@ class AISaleService:
                     # ********  extra fields
                     recording_url="",
                     recording_file_path="",
+                    total_enrolled_balance=total_enrolled_balance,
+                    enrollment_fee_percentage=enrollment_fee_percentage,
                 )
             )
         print("Total Tasks: ", len(Recordings.batch))
-
-    
 
     # ********************************************************************************************************
     # Process
@@ -161,21 +168,24 @@ class AISaleService:
             config_name="AI_SALE_GENERAL_ERROR_LIST",
         )
 
-        # ********  Init transcription Service
-        self.transcribe_service = TranscribeService(
-            config_file="config.ini", config_name="AWS"
-        )
+        # # ********  Init transcription Service
+        # self.transcribe_service = TranscribeService(
+        #     config_file="config.ini", config_name="AWS"
+        # )
 
         # ********  Init CRM API Service
         self.crm_api_service = CrmAPIService(
             config_file="config.ini", config_name="CRM"
         )
 
+        # ********  Init Auditor Service
+        self.auditor_service = AuditorService()
+
         # ********  Init Validation Service
         self.validation_service = ValidationService()
 
-        # ********  Init GPT Service
-        self.gpt_service = GPTService(config_file="config.ini", config_name="OPENAI")
+        # # ********  Init GPT Service
+        # self.gpt_service = GPTService(config_file="config.ini", config_name="OPENAI")
 
         # ********  Init Reporting Service
         self.reporting_service = ReportingService()
@@ -196,7 +206,8 @@ class AISaleService:
         #     to_date_time=to_date_time,
         # )
 
-        self.get_recordings_with_sql(Recordings=recordings, from_date_time=from_date_time, to_date_time=to_date_time)
+        self.get_recordings_with_sql(
+            Recordings=recordings, from_date_time=from_date_time, to_date_time=to_date_time)
 
         print("************************************************************")
 
@@ -224,33 +235,47 @@ class AISaleService:
         )
 
         # ********  Download Recording
-        self.crm_api_service.download_recording(recording=recording)
+        # self.crm_api_service.download_recording(recording=recording)
 
-        # ********  Transcribe Recording
-        self.transcribe_service.process(recording=recording)
+        # # ********  Transcribe Recording
+        # self.transcribe_service.process(recording=recording)
 
-        # ********  Calculate Weight Percentage
+        # # ********  Calculate Weight Percentage
         recording.weight_percentage = self.crm_api_service.calculate_weight_percentage(
             profile_id=recording.profile_id
         )
-
-        # ********  GPT process
-        gpt_response = self.gpt_service.process(
-            recording=recording, general_error_list=general_error_list
+        recording.estimated_pay_off_amount = self.crm_api_service.calculate_estimated_pay_off_amount(
+            recording=recording
         )
 
-        gpt_response = json.loads(gpt_response)
+        # # ********  GPT process
+        # gpt_response = self.gpt_service.process(
+        #     recording=recording, general_error_list=general_error_list
+        # )
+
+        # gpt_response = json.loads(gpt_response)
 
         # # ********  Validate Transcript
         # validation_result = self.validation_service.validate_all(
         #     summary_dict=summary_dict
         # )
+        response = self.auditor_service.process(recording=recording)
 
-        if gpt_response["status"] == "false":
-            recording.success = False
-            recording.error_code_list = gpt_response["error_code_list"]
+        if response.status_code != 200:
+            return self.TRANS_CODE.GENERAL.ERROR_CODE.X101
+
         else:
-            recording.success = True
+            response = response.json()
+
+        if response == {}:
+            recording.success = False
+            recording.error_code_list = []
+        else:
+            recording.error_code_list = response["error_code_list"]
+            if recording.error_code_list == []:
+                recording.success = True
+            else:
+                recording.success = False
 
         # ******** log to mongo
         document = {
@@ -267,9 +292,9 @@ class AISaleService:
             "document_uploaded_by_name": recording.document_uploaded_by_name,
             "document_uploaded_at": recording.document_uploaded_at,
             "success": recording.success,
-            "duration": recording.duration,
-            "transcript": recording.transcript,
-            "error_code_list": gpt_response["error_code_list"],
+            "duration": response["duration"],
+            "transcript": response["transcript"],
+            "error_code_list": recording.error_code_list,
             "created_at": datetime.now(pytz.utc),
             "modified_at": datetime.now(pytz.utc),
         }
@@ -300,22 +325,49 @@ class AISaleService:
                 # Add error code for non-audio file
                 recording.error_code_list = [
                     {
-                        "error_code": "F101",
+                        "error_code": "N/A",
                         "error_message": self.TRANS_CODE.GENERAL.ERROR_CODE.F101,
-                        "error_reference": [],
+                        "error_reference": [{
+                            "time_occurred": "00:00",
+                            "entity": "recording",
+                            "transcript": "",
+                            "detail": "File Uploaded Is Not An Audio File"
+                        },],
                     }
                 ]
                 # Log and report error
-                self.reporting_service.push_blank_call_to_make_report(recording=recording)
+                self.reporting_service.push_blank_call_to_make_report(
+                    recording=recording)
                 self.reporting_service.push_to_make_report(recording=recording)
-                
+
+            elif Action == self.TRANS_CODE.GENERAL.ERROR_CODE.X101:
+                # Add error code for non-audio file
+                recording.error_code_list = [
+                    {
+                        "error_code": "N/A",
+                        "error_message": self.TRANS_CODE.GENERAL.ERROR_CODE.X101,
+                        "error_reference": [{
+                            "time_occurred": "00:00",
+                            "entity": "recording",
+                            "transcript": "",
+                            "detail": "AmplifiedVoice Error Code"
+                        },],
+                    }
+                ]
+                # Log and report error
+                self.reporting_service.push_blank_call_to_make_report(
+                    recording=recording)
+                self.reporting_service.push_to_make_report(recording=recording)
+
             elif Action != self.TRANS_CODE.GENERAL.ERROR_CODE.X100:
                 # Send to Gchat for other cases except X100
-                self.reporting_service.push_blank_call_to_make_report(recording=recording)
+                self.reporting_service.push_blank_call_to_make_report(
+                    recording=recording)
                 self.reporting_service.push_to_make_report(recording=recording)
             else:
                 # Just print for X100 case
-                print(f"Document {recording.document_id} already exists in mongo")
+                print(
+                    f"Document {recording.document_id} already exists in mongo")
 
             print("------------------------------Done------------------------------")
 
@@ -371,7 +423,8 @@ class AISaleService:
         )
 
         # Process with GPT
-        self.gpt_service = GPTService(config_file="config.ini", config_name="OPENAI")
+        self.gpt_service = GPTService(
+            config_file="config.ini", config_name="OPENAI")
         gpt_response = self.gpt_service.process(
             recording=recording, general_error_list=general_error_list
         )

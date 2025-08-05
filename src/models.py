@@ -51,6 +51,9 @@ class RecordingModel(BaseModel):
     profile_status: str = None
     enrolled_date: str = None
     submitted_date: datetime = None
+    total_enrolled_balance: float = None
+    enrollment_fee_percentage: float = None
+    estimated_pay_off_amount: float = None
 
 class RecordingBatchModel(BaseModel):
     batch: List[RecordingModel]

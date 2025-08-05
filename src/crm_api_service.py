@@ -408,4 +408,15 @@ class CrmAPIService:
             return "0 %"
 
         percentage = math.ceil((total_weighted_amount / total_unsecured_debts) * 100)
-        return f"{percentage} %"
+        return percentage
+
+
+    # ********************************************************************************************************
+    # Calculate Estimated Pay Off Amount
+    # ********************************************************************************************************
+    def calculate_estimated_pay_off_amount(self, recording: RecordingModel) -> str:
+        """
+        Calculate weighted percentage based on liability profile data
+        Returns percentage as string with % symbol
+        """
+        return round((recording.total_enrolled_balance * recording.enrollment_fee_percentage) + (recording.total_enrolled_balance * recording.weight_percentage/100), 2)

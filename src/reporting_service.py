@@ -1,6 +1,11 @@
 from openpyxl import Workbook
 from httplib2 import Http
-import datetime, os, configparser, json, pytz, requests
+import datetime
+import os
+import configparser
+import json
+import pytz
+import requests
 
 # ***** project
 from models import RecordingModel
@@ -18,6 +23,7 @@ class ReportingService:
         config.read(config_file_path)
         self.make_webhook = config["MAKE"]["WEBHOOK"]
         self.make_blank_call_webhook = config["MAKE"]["BLANK_CALL_WEBHOOK"]
+
     def _getTodayTime(self):
         utc_now = datetime.datetime.now(pytz.utc)
         pdt_timezone = pytz.timezone("America/Los_Angeles")
@@ -155,30 +161,26 @@ class ReportingService:
         payload = {
             "document_name": recording.document_name,
             "profile_id": recording.profile_id,
-            "error_list": (
-                [
+            "error_list": recording.error_code_list if recording.error_code_list else [{
+                "error_code": "200",
+                "error_message": "No Issue",
+                "error_reference": [
                     {
-                        "error_code": f"{error['error_code']}:{error['error_message']}".replace(
-                            "'", ""
-                        ),
-                        "error_reference": ref["time_occurred"]
-                        + " - "
-                        + ref["entity"]
-                        + " - "
-                        + ref["detail"].replace("'", ""),
+                        "time_occurred": "00:00",
+                        "entity": "salesperson",
+                        "transcript": "N/A",
+                        "detail": "No Issue"
                     }
-                    for error in recording.error_code_list
-                    for ref in error.get("error_reference", [])
                 ]
-                if recording.error_code_list
-                else []
-            ),
-            "transcript": f"https://api.cdszone.com/api/ai/sale-recording/log/transcript/{recording.document_id}",
+            }],
+            "url_transcript": f"https://api.cdszone.com/api/ai/sale-recording/log/transcript/{recording.document_id}",
             "profile_status": recording.profile_status,
             "client_name": recording.first_name + " " + recording.last_name,
             "sales_employee": recording.sale_employee_name,
             "sales_company": recording.sale_company,
             "enrolled_date": recording.enrolled_date,
+            "submitted_date": str(recording.submitted_date) if recording.submitted_date else None,
+            "document_uploaded_at": str(recording.document_uploaded_at) if recording.document_uploaded_at else None,
         }
 
         # Send POST request to make.com webhook URL
@@ -201,10 +203,10 @@ class ReportingService:
         except requests.exceptions.RequestException as e:
             print(f"Error sending report to make.com: {str(e)}")
 
-
     # ********************************************************************************************************
     # Push to make.com report
     # ********************************************************************************************************
+
     def push_blank_call_to_make_report(self, recording: RecordingModel):
         # Prepare JSON payload matching the required format
         payload = {

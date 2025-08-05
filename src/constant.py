@@ -30,6 +30,9 @@ class TRANSACTION_CODES:
             #######
             X100 = "Document already exists in mongo"
 
+            #*****
+            X101 = "AmplifiedVoice Error Code"
+
         class STANDARD_CODE:
             SUCCESS = "SUCCESS"
 
