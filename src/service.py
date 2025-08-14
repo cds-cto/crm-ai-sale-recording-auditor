@@ -227,6 +227,43 @@ class AISaleService:
         if not self.validation_service.valid_audio_file(
             file_path=recording.document_name
         ):
+            recording.success = False
+            recording.error_code_list = [
+                {
+                    "error_code": "N/A",
+                    "error_message": self.TRANS_CODE.GENERAL.ERROR_CODE.F101,
+                    "error_reference": [{
+                        "time_occurred": "00:00",
+                        "entity": "recording",
+                        "transcript": "",
+                        "detail": "File Uploaded Is Not An Audio File"
+                    },],
+                }
+            ]
+            recording.duration = 0
+            recording.transcript = None
+
+            document = {
+                    "document_name": recording.document_name,
+                    "document_id": recording.document_id,
+                    "document_title": recording.document_title,
+                    "profile_id": recording.profile_id,
+                    "first_name": recording.first_name,
+                    "last_name": recording.last_name,
+                    "sale_company": recording.sale_company,
+                    "sale_employee_id": recording.sale_employee_id,
+                    "sale_employee_name": recording.sale_employee_name,
+                    "document_uploaded_by_id": recording.document_uploaded_by_id,
+                    "document_uploaded_by_name": recording.document_uploaded_by_name,
+                    "document_uploaded_at": recording.document_uploaded_at,
+                    "success": recording.success,
+                    "duration": recording.duration,
+                    "transcript": recording.transcript,
+                    "error_code_list": recording.error_code_list,
+                    "created_at": datetime.now(pytz.utc),
+                    "modified_at": datetime.now(pytz.utc),
+                }
+            self.ai_sale_logs.collection.insert_one(document=document)
             return self.TRANS_CODE.GENERAL.ERROR_CODE.F101
 
         # ********  Get Recording URL
@@ -262,6 +299,43 @@ class AISaleService:
         response = self.auditor_service.process(recording=recording)
 
         if response.status_code != 200:
+            recording.success = False
+            recording.error_code_list = [
+                {
+                    "error_code": "N/A",
+                    "error_message": self.TRANS_CODE.GENERAL.ERROR_CODE.X101,
+                    "error_reference": [{
+                        "time_occurred": "00:00",
+                        "entity": "recording",
+                        "transcript": "",
+                        "detail": "AmplifiedVoice Error Code , Not 200"
+                    },],
+                }
+            ]
+            recording.duration = 0
+            recording.transcript = None
+
+            document = {
+                    "document_name": recording.document_name,
+                    "document_id": recording.document_id,
+                    "document_title": recording.document_title,
+                    "profile_id": recording.profile_id,
+                    "first_name": recording.first_name,
+                    "last_name": recording.last_name,
+                    "sale_company": recording.sale_company,
+                    "sale_employee_id": recording.sale_employee_id,
+                    "sale_employee_name": recording.sale_employee_name,
+                    "document_uploaded_by_id": recording.document_uploaded_by_id,
+                    "document_uploaded_by_name": recording.document_uploaded_by_name,
+                    "document_uploaded_at": recording.document_uploaded_at,
+                    "success": recording.success,
+                    "duration": recording.duration,
+                    "transcript": recording.transcript,
+                    "error_code_list": recording.error_code_list,
+                    "created_at": datetime.now(pytz.utc),
+                    "modified_at": datetime.now(pytz.utc),
+                }
+            self.ai_sale_logs.collection.insert_one(document=document)
             return self.TRANS_CODE.GENERAL.ERROR_CODE.X101
 
         else:
@@ -269,15 +343,95 @@ class AISaleService:
 
         if response == {}:
             recording.success = False
-            recording.error_code_list = []
+            recording.duration = 0
+            recording.transcript = None
+            recording.error_code_list = [
+                {
+                    "error_code": "N/A",
+                    "error_message": self.TRANS_CODE.GENERAL.ERROR_CODE.X101,
+                    "error_reference": [{
+                        "time_occurred": "00:00",
+                        "entity": "recording",
+                        "transcript": "",
+                        "detail": "AmplifiedVoice Error, No response returned"
+                    },],
+                }
+            ]
+
+            document = {
+                "document_name": recording.document_name,
+                "document_id": recording.document_id,
+                "document_title": recording.document_title,
+                "profile_id": recording.profile_id,
+                "first_name": recording.first_name,
+                "last_name": recording.last_name,
+                "sale_company": recording.sale_company,
+                "sale_employee_id": recording.sale_employee_id,
+                "sale_employee_name": recording.sale_employee_name,
+                "document_uploaded_by_id": recording.document_uploaded_by_id,
+                "document_uploaded_by_name": recording.document_uploaded_by_name,
+                "document_uploaded_at": recording.document_uploaded_at,
+                "success": recording.success,
+                "duration": recording.duration,
+                "transcript": recording.transcript,
+                "error_code_list": recording.error_code_list,
+                "created_at": datetime.now(pytz.utc),
+                "modified_at": datetime.now(pytz.utc),
+            }
+            self.ai_sale_logs.collection.insert_one(document=document)
+            return self.TRANS_CODE.GENERAL.ERROR_CODE.X101
         else:
-            recording.error_code_list = response["error_code_list"]
-            if recording.error_code_list == []:
-                recording.success = True
-            else:
+            try:
+                recording.error_code_list = response["error_code_list"]
+                recording.transcript = response["transcript"]
+                recording.duration = response["duration"]
+                if recording.error_code_list == []:
+                    recording.success = True
+                else:
+                    recording.success = False
+            except:
                 recording.success = False
+                recording.duration = 0
+                recording.transcript = None
+                recording.error_code_list = [
+                    {
+                        "error_code": "N/A",
+                        "error_message": self.TRANS_CODE.GENERAL.ERROR_CODE.X101,
+                        "error_reference": [{
+                            "time_occurred": "00:00",
+                            "entity": "recording",
+                            "transcript": "",
+                            "detail": "AmplifiedVoice Error, Can't parse data from response"
+                        },],
+                    }
+                ]
+
+                document = {
+                    "document_name": recording.document_name,
+                    "document_id": recording.document_id,
+                    "document_title": recording.document_title,
+                    "profile_id": recording.profile_id,
+                    "first_name": recording.first_name,
+                    "last_name": recording.last_name,
+                    "sale_company": recording.sale_company,
+                    "sale_employee_id": recording.sale_employee_id,
+                    "sale_employee_name": recording.sale_employee_name,
+                    "document_uploaded_by_id": recording.document_uploaded_by_id,
+                    "document_uploaded_by_name": recording.document_uploaded_by_name,
+                    "document_uploaded_at": recording.document_uploaded_at,
+                    "success": recording.success,
+                    "duration": recording.duration,
+                    "transcript": recording.transcript,
+                    "error_code_list": recording.error_code_list,
+                    "created_at": datetime.now(pytz.utc),
+                    "modified_at": datetime.now(pytz.utc),
+                }
+                self.ai_sale_logs.collection.insert_one(document=document)
+                return self.TRANS_CODE.GENERAL.ERROR_CODE.X101
 
         # ******** log to mongo
+        
+
         document = {
             "document_name": recording.document_name,
             "document_id": recording.document_id,
@@ -321,45 +475,9 @@ class AISaleService:
             recording.profile_status = profile_info["statusName"]
             recording.enrolled_date = profile_info["enrolledDate"]
 
-            if Action == self.TRANS_CODE.GENERAL.ERROR_CODE.F101:
-                # Add error code for non-audio file
-                recording.error_code_list = [
-                    {
-                        "error_code": "N/A",
-                        "error_message": self.TRANS_CODE.GENERAL.ERROR_CODE.F101,
-                        "error_reference": [{
-                            "time_occurred": "00:00",
-                            "entity": "recording",
-                            "transcript": "",
-                            "detail": "File Uploaded Is Not An Audio File"
-                        },],
-                    }
-                ]
-                # Log and report error
-                self.reporting_service.push_blank_call_to_make_report(
-                    recording=recording)
-                self.reporting_service.push_to_make_report(recording=recording)
+        
 
-            elif Action == self.TRANS_CODE.GENERAL.ERROR_CODE.X101:
-                # Add error code for non-audio file
-                recording.error_code_list = [
-                    {
-                        "error_code": "N/A",
-                        "error_message": self.TRANS_CODE.GENERAL.ERROR_CODE.X101,
-                        "error_reference": [{
-                            "time_occurred": "00:00",
-                            "entity": "recording",
-                            "transcript": "",
-                            "detail": "AmplifiedVoice Error Code"
-                        },],
-                    }
-                ]
-                # Log and report error
-                self.reporting_service.push_blank_call_to_make_report(
-                    recording=recording)
-                self.reporting_service.push_to_make_report(recording=recording)
-
-            elif Action != self.TRANS_CODE.GENERAL.ERROR_CODE.X100:
+            if Action != self.TRANS_CODE.GENERAL.ERROR_CODE.X100:
                 # Send to Gchat for other cases except X100
                 self.reporting_service.push_blank_call_to_make_report(
                     recording=recording)

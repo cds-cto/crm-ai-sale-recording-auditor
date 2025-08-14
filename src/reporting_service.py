@@ -168,12 +168,12 @@ class ReportingService:
                     {
                         "time_occurred": "00:00",
                         "entity": "salesperson",
-                        "transcript": "N/A",
-                        "detail": "No Issue"
+                        "transcript": "No issue",
+                        "detail": "Clean Call"
                     }
                 ]
             }],
-            "url_transcript": f"https://api.cdszone.com/api/ai/sale-recording/log/transcript/{recording.document_id}",
+            "url_transcript": f"https://api.cdszone.com/api/ai/sale-recording/log/transcript/{recording.document_id}" if recording.transcript else "No Transcript due to file is corrupted or none-transcriptable",
             "profile_status": recording.profile_status,
             "client_name": recording.first_name + " " + recording.last_name,
             "sales_employee": recording.sale_employee_name,
