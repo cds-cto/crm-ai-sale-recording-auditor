@@ -93,8 +93,6 @@ class AISaleService:
                     LEFT JOIN ProfileAdditionalStatuses WCStatus ON Profiles.ProfileId = WCStatus.ProfileId
                         AND WCStatus.AdditionalStatusId = 'E390DAEA-B84B-42A7-B95B-FE1FAC50F7C3'
                 WHERE Companies.Type = 1
-                    AND Profiles.Status in (1)
-                    AND RecordingStatus.Value = 'Uploaded'
                     AND Documents.Category = 'ce25a439-86de-48c0-aebb-18de5d46ea61'
                     AND Documents.CreatedAt >= ?
 
