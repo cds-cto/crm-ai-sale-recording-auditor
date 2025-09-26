@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Union
 from datetime import datetime
 
 
@@ -50,7 +50,7 @@ class RecordingModel(BaseModel):
     file_extension: str = None
     profile_status: str = None
     enrolled_date: str = None
-    submitted_date: datetime = None
+    submitted_date: Union[datetime, None] = None
     total_enrolled_balance: float = None
     enrollment_fee_percentage: float = None
     estimated_pay_off_amount: float = None

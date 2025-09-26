@@ -221,7 +221,7 @@ class ReportingService:
                     }
                 ]
             ),
-            "transcript": f"https://api.cdszone.com/api/ai/sale-recording/log/transcript/{recording.document_id}",
+            "transcript": f"https://api.cdszone.com/api/ai/sale-recording/log/transcript/{recording.document_id}" if recording.transcript else "No Transcript due to file is corrupted or none-transcriptable",
             "profile_status": recording.profile_status,
             "client_name": recording.first_name + " " + recording.last_name,
             "sales_employee": recording.sale_employee_name,

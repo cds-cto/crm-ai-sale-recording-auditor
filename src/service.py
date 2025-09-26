@@ -62,43 +62,50 @@ class AISaleService:
         """Get tasks from start_date to end_date"""
 
         SQL = """SELECT
-                    Documents.Name As DocumentName,
-                    Documents.DocumentId As DocumentId,
-                    Documents.Title As DocumentTitle,
-                    Documents.ProfileId As ProfileId,
-                    Profiles.FirstName, 
-                    Profiles.LastName,
-                    Companies.Name As SalesCompany,
-                    sales.EmployeeId As SalesId,
-                    sales.Alias As SalesName,
-                    documentupload.EmployeeId As DocumentUploadedById,
-                    documentupload.Alias As DocumentUploadedByName,
-                    DATEADD(HOUR, -7, Documents.CreatedAt) As DocumentUploadedAt,
-                    Profiles.SubmittedDate,
-                    Enrollments.TotalBalance,
-                    Enrollments.EnrollmentFee
+                        Documents.Name As DocumentName,
+                        Documents.DocumentId As DocumentId,
+                        Documents.Title As DocumentTitle,
+                        Documents.ProfileId As ProfileId,
+                        Profiles.FirstName,
+                        Profiles.LastName,
+                        Companies.Name As SalesCompany,
+                        sales.EmployeeId As SalesId,
+                        sales.Alias As SalesName,
+                        documentupload.EmployeeId As DocumentUploadedById,
+                        documentupload.Alias As DocumentUploadedByName,
+                        DATEADD(HOUR, -7, Documents.CreatedAt) As DocumentUploadedAt,
+                        Profiles.SubmittedDate,
+                        Enrollments.TotalBalance,
+                        Enrollments.EnrollmentFee,
+                        RecordingStatus.Value
 
 
 
-                FROM Documents
-                    LEFT JOIN Enrollments ON Enrollments.ProfileId = Documents.ProfileId
-                    LEFT JOIN Profiles ON Documents.ProfileId = Profiles.ProfileId
-                    LEFT JOIN ProfileAssignees ON Profiles.ProfileId = ProfileAssignees.ProfileId
-                        AND ProfileAssignees.AssigneeId = '028F546A-0429-4C9A-B50D-436BFA655075'
-                    LEFT JOIN Employees sales ON ProfileAssignees.EmployeeId = sales.EmployeeId
-                    LEFT JOIN Companies ON sales.CompanyId = Companies.CompanyId
-                    LEFT JOIN Employees documentupload ON Documents.CreatedBy = documentupload.EmployeeId
-                    LEFT JOIN ProfileAdditionalStatuses RecordingStatus ON Profiles.ProfileId = RecordingStatus.ProfileId
-                        AND RecordingStatus.AdditionalStatusId = '50C25FCA-23E0-4E69-844E-22EDF8E88DA2'
-                    LEFT JOIN ProfileAdditionalStatuses WCStatus ON Profiles.ProfileId = WCStatus.ProfileId
-                        AND WCStatus.AdditionalStatusId = 'E390DAEA-B84B-42A7-B95B-FE1FAC50F7C3'
-                WHERE Companies.Type = 1
-                    AND Documents.Category = 'ce25a439-86de-48c0-aebb-18de5d46ea61'
-                    AND Documents.CreatedAt >= ?
+                    FROM Documents
+                        LEFT JOIN Enrollments ON Enrollments.ProfileId = Documents.ProfileId
+                        LEFT JOIN Profiles ON Documents.ProfileId = Profiles.ProfileId
+                        LEFT JOIN ProfileAssignees ON Profiles.ProfileId = ProfileAssignees.ProfileId
+                            AND ProfileAssignees.AssigneeId = '028F546A-0429-4C9A-B50D-436BFA655075'
+                        LEFT JOIN Employees sales ON ProfileAssignees.EmployeeId = sales.EmployeeId
+                        LEFT JOIN Companies ON sales.CompanyId = Companies.CompanyId
+                        LEFT JOIN Employees documentupload ON Documents.CreatedBy = documentupload.EmployeeId
+                        LEFT JOIN ProfileAdditionalStatuses RecordingStatus ON Profiles.ProfileId = RecordingStatus.ProfileId
+                            AND RecordingStatus.AdditionalStatusId = '50C25FCA-23E0-4E69-844E-22EDF8E88DA2'
+                        LEFT JOIN ProfileAdditionalStatuses WCStatus ON Profiles.ProfileId = WCStatus.ProfileId
+                            AND WCStatus.AdditionalStatusId = 'E390DAEA-B84B-42A7-B95B-FE1FAC50F7C3'
+                    WHERE Companies.Type = 1
+                        AND Documents.Category = 'ce25a439-86de-48c0-aebb-18de5d46ea61'
+                        AND Documents.CreatedAt >= ?
+                        AND Documents.CreatedAt <= ?
+                        AND RecordingStatus.value = 'Uploaded'
+                        AND Profiles.Status not in (2,5,11)
+                        and Enrollments.TotalBalance is not null 
+                        
+
 
                 """
 
-        fetch_data = self.sql_service.fetchall(SQL, [from_date_time])
+        fetch_data = self.sql_service.fetchall(SQL, [from_date_time, to_date_time])
 
         for data in fetch_data:
             document_name = data[0]
@@ -297,6 +304,7 @@ class AISaleService:
         response = self.auditor_service.process(recording=recording)
 
         if response.status_code != 200:
+            print(response.text)
             recording.success = False
             recording.error_code_list = [
                 {
@@ -306,7 +314,7 @@ class AISaleService:
                         "time_occurred": "00:00",
                         "entity": "recording",
                         "transcript": "",
-                        "detail": "AmplifiedVoice Error Code , Not 200"
+                        "detail": f"AmplifiedVoice Error Code , Not 200: {response.text}"
                     },],
                 }
             ]

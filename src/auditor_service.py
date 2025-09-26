@@ -20,7 +20,7 @@ class AuditorService:
         }
 
         response = r.post(
-            url= "https://techcds.app.n8n.cloud/webhook/sales-order-audit",
+            url= "https://n8n.srv1027347.hstgr.cloud/webhook/sales-order-audit",
             json=data
         )
 
