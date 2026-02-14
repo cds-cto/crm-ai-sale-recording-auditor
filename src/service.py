@@ -46,7 +46,7 @@ class AISaleService:
         for error in general_error_list:
             prompt += f"- {error['issue_code']}: {error['issue_name']}\n"
             for check in error["issue_check"]:
-                prompt += f"  {check.format(assign_company='Citizen Debt Services')}\n"
+                prompt += f"  {check.format(assign_company='Impressions Debt Services')}\n"
 
         return prompt
 
