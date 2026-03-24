@@ -33,9 +33,14 @@ class AISaleService:
     # ********************************************************************************************************
 
     def _get_external_ping(self):
-        r = requests.Session()
-        res = r.get("https://curlmyip.org/", verify=False)
-        print(res.text)
+        try:
+            r = requests.Session()
+            res = r.get("https://ipinfo.io/ip", verify=False, timeout=10)
+            print(res.text)
+        except:
+            print("Failed to get external IP")
+
+
 
     # ********************************************************************************************************
     # Get General Error List
