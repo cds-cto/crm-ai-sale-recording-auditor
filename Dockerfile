@@ -15,6 +15,13 @@ ENV DOCKER_CONTENT_TRUST 1
 
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn
 
+# Debian 10 "Buster" is end-of-life and has been moved to archive.debian.org,
+# so the default mirrors return 404. Repoint apt at the archive and skip the
+# expired "Valid-Until" check so package installs still work.
+RUN echo "deb http://archive.debian.org/debian buster main contrib non-free" > /etc/apt/sources.list \
+ && echo "deb http://archive.debian.org/debian-security buster/updates main contrib non-free" >> /etc/apt/sources.list \
+ && echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
+
 # Updates packages list for the image
 RUN apt-get update
 

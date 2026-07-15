@@ -51,9 +51,9 @@ class RecordingModel(BaseModel):
     profile_status: str = None
     enrolled_date: str = None
     submitted_date: Union[datetime, None] = None
-    total_enrolled_balance: float = None
-    enrollment_fee_percentage: float = None
-    estimated_pay_off_amount: float = None
+    total_enrolled_balance: Union[float, None] = None
+    enrollment_fee_percentage: Union[float, None] = None
+    estimated_pay_off_amount: Union[float, None] = None
 
 class RecordingBatchModel(BaseModel):
     batch: List[RecordingModel]
@@ -62,6 +62,6 @@ class RecordingBatchModel(BaseModel):
 class WeightPercentageModel(BaseModel):
     enrolled: bool
     accountType: int
-    averageSettlementLegalPercentage: float
-    averageSettlementPercentage: float
+    averageSettlementLegalPercentage: Union[float, None] = None
+    averageSettlementPercentage: Union[float, None] = None
     originalBalance: float

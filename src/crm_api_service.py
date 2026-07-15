@@ -419,4 +419,9 @@ class CrmAPIService:
         Calculate weighted percentage based on liability profile data
         Returns percentage as string with % symbol
         """
-        return round((recording.total_enrolled_balance * recording.enrollment_fee_percentage) + (recording.total_enrolled_balance * recording.weight_percentage/100), 2)
+        total_balance = recording.total_enrolled_balance or 0
+        fee_percentage = recording.enrollment_fee_percentage or 0
+        # weight_percentage is an int, or the string "0 %" when there is no enrolled debt
+        weight = recording.weight_percentage
+        weight = weight / 100 if isinstance(weight, (int, float)) else 0
+        return round((total_balance * fee_percentage) + (total_balance * weight), 2)

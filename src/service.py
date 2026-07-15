@@ -277,6 +277,7 @@ class AISaleService:
             return self.TRANS_CODE.GENERAL.ERROR_CODE.F101
 
         # ********  Get Recording URL
+        print("   -> Fetching recording URL and computing settlement figures...")
         recording.recording_url = self.crm_api_service.get_recordings_url(
             document_id=recording.document_id
         )
@@ -306,7 +307,9 @@ class AISaleService:
         # validation_result = self.validation_service.validate_all(
         #     summary_dict=summary_dict
         # )
+        print("   -> Sending to auditor webhook, waiting for result (this can take a few minutes)...")
         response = self.auditor_service.process(recording=recording)
+        print(f"   -> Auditor responded with HTTP {response.status_code}")
 
         if response.status_code != 200:
             print(response.text)
@@ -472,33 +475,50 @@ class AISaleService:
         # ********  Get General Error List
         general_error_list = self._get_general_error_list()
 
-        for recording in recordings.batch:
-
-            # ********  Handling
-            Action = self.handling(
-                recording=recording, general_error_list=general_error_list
+        total = len(recordings.batch)
+        for idx, recording in enumerate(recordings.batch, start=1):
+            print(
+                f"\n===== [{idx}/{total}] Processing {recording.document_name} "
+                f"({recording.document_id}) ====="
             )
+            try:
+                # ********  Handling
+                Action = self.handling(
+                    recording=recording, general_error_list=general_error_list
+                )
 
-            # get profile info
-            profile_info = self.crm_api_service.get_profile_info(
-                profile_id=recording.profile_id
-            )
-            recording.profile_status = profile_info["statusName"]
-            recording.enrolled_date = profile_info["enrolledDate"]
+                # get profile info
+                profile_info = self.crm_api_service.get_profile_info(
+                    profile_id=recording.profile_id
+                )
+                recording.profile_status = profile_info["statusName"]
+                recording.enrolled_date = profile_info["enrolledDate"]
 
-        
+                if Action != self.TRANS_CODE.GENERAL.ERROR_CODE.X100:
+                    # Send to Gchat for other cases except X100
+                    self.reporting_service.push_blank_call_to_make_report(
+                        recording=recording)
+                    self.reporting_service.push_to_make_report(recording=recording)
+                else:
+                    # Just print for X100 case
+                    print(
+                        f"Document {recording.document_id} already exists in mongo")
 
-            if Action != self.TRANS_CODE.GENERAL.ERROR_CODE.X100:
-                # Send to Gchat for other cases except X100
-                self.reporting_service.push_blank_call_to_make_report(
-                    recording=recording)
-                self.reporting_service.push_to_make_report(recording=recording)
-            else:
-                # Just print for X100 case
+            except Exception as e:
+                # One bad recording must not halt the whole batch:
+                # log it, alert to Google Chat, and continue with the next one.
                 print(
-                    f"Document {recording.document_id} already exists in mongo")
+                    f"Error processing recording {recording.document_id} "
+                    f"({recording.document_name}): {str(e)}"
+                )
+                self.reporting_service.send_failure_alert(
+                    recording=recording, error=str(e)
+                )
 
-            print("------------------------------Done------------------------------")
+            print(
+                f"------------------------------ [{idx}/{total}] Done "
+                "------------------------------"
+            )
 
     # ********************************************************************************************************
     # TESTING Process Check GPT

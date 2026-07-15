@@ -15,6 +15,15 @@ from s3connect import S3Connect
 from constant import TRANSACTION_CODES
 
 
+# Default Google Chat webhook for per-recording failure alerts.
+# Override by adding a "FailureAlert" key under the [GCHAT] section in config.ini.
+DEFAULT_FAILURE_ALERT_WEBHOOK = (
+    "https://chat.googleapis.com/v1/spaces/AAQASad24FQ/messages"
+    "?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI"
+    "&token=VmHXUi8s0XnQJasU1_VQnblEQ93phwoHDJ7dAa_FQj4"
+)
+
+
 class ReportingService:
     def __init__(self):
         self.current_folder = os.path.dirname(os.path.abspath(__file__))
@@ -23,6 +32,9 @@ class ReportingService:
         config.read(config_file_path)
         self.make_webhook = config["MAKE"]["WEBHOOK"]
         self.make_blank_call_webhook = config["MAKE"]["BLANK_CALL_WEBHOOK"]
+        self.failure_alert_webhook = config.get(
+            "GCHAT", "FailureAlert", fallback=DEFAULT_FAILURE_ALERT_WEBHOOK
+        )
 
     def _getTodayTime(self):
         utc_now = datetime.datetime.now(pytz.utc)
@@ -202,6 +214,37 @@ class ReportingService:
             )
         except requests.exceptions.RequestException as e:
             print(f"Error sending report to make.com: {str(e)}")
+
+    # ********************************************************************************************************
+    # Google Chat failure alert
+    # ********************************************************************************************************
+    def send_failure_alert(self, recording: RecordingModel, error: str):
+        """
+        Post a Google Chat alert when a recording fails to process,
+        so failed recordings are visible and can be re-run.
+        """
+        message = (
+            "⚠️ *Sale recording failed to process*\n\n"
+            f"Client : {recording.first_name} {recording.last_name}\n"
+            f"Profile ID : {recording.profile_id}\n"
+            f"Document : {recording.document_name}\n"
+            f"Document ID : {recording.document_id}\n"
+            f"Sales employee : {recording.sale_employee_name}\n"
+            f"Sales company : {recording.sale_company}\n\n"
+            f"Error : {error}"
+        )
+
+        try:
+            response = requests.post(
+                self.failure_alert_webhook,
+                data=json.dumps({"text": message}),
+                headers={"Content-Type": "application/json; charset=UTF-8"},
+            )
+            print(
+                f"Failure alert posted for {recording.document_name}: {response.status_code}"
+            )
+        except requests.exceptions.RequestException as e:
+            print(f"Error posting failure alert to Google Chat: {str(e)}")
 
     # ********************************************************************************************************
     # Push to make.com report

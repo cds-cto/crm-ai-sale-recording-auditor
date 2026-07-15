@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM AI Sale Recording Auditor — Upgrade Plan</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --ink: #1c2530;
+    --muted: #5b6675;
+    --line: #e2e6ec;
+    --accent: #2b6cb0;
+    --accent-soft: #e8f0fa;
+    --green: #2f855a;
+    --green-soft: #e6f4ec;
+    --red: #c53030;
+    --red-soft: #fbe8e8;
+    --amber: #b7791f;
+    --amber-soft: #fcf3e3;
+    --purple: #6b46c1;
+    --purple-soft: #efe9fb;
+    --shadow: 0 1px 2px rgba(20,30,45,.06), 0 4px 16px rgba(20,30,45,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f141b; --panel: #171e27; --ink: #e6eaf0; --muted: #9aa6b5; --line: #2a333f;
+      --accent: #6ba6e6; --accent-soft: #1b2836; --green: #7fd1a3; --green-soft: #14251c;
+      --red: #f08a8a; --red-soft: #2a1919; --amber: #e2b366; --amber-soft: #29220f;
+      --purple: #b79df0; --purple-soft: #201a30;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 48px 24px 80px; }
+  header.hero { border-left: 4px solid var(--accent); padding: 4px 0 4px 20px; margin-bottom: 36px; }
+  header.hero .kicker { text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 700; color: var(--accent); margin: 0 0 8px; }
+  header.hero h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.15; }
+  header.hero p { margin: 0; color: var(--muted); font-size: 16px; max-width: 70ch; }
+
+  h2 { font-size: 20px; margin: 44px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+  h2 .num { font-size: 13px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 6px; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+  h3 { font-size: 15px; margin: 22px 0 10px; }
+  p { margin: 0 0 14px; }
+  code { font-family: "SF Mono", ui-monospace, "Cascadia Code", Consolas, monospace; font-size: .88em; background: var(--accent-soft); color: var(--accent); padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 18px; }
+  .tldr { border-left: 3px solid var(--accent); }
+  .tldr strong { color: var(--accent); }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .cols { grid-template-columns: 1fr; } }
+  .mini { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--panel); }
+  .mini .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 6px; }
+  .mini .from { color: var(--red); font-weight: 650; }
+  .mini .arrow { color: var(--muted); margin: 0 8px; }
+  .mini .to { color: var(--green); font-weight: 650; }
+  .mini .sub { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--panel); }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--accent-soft); color: var(--ink); font-weight: 650; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  td .desc { color: var(--muted); }
+
+  .risk { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; white-space: nowrap; }
+  .r-low { background: var(--green-soft); color: var(--green); }
+  .r-med { background: var(--amber-soft); color: var(--amber); }
+  .r-high { background: var(--red-soft); color: var(--red); }
+
+  ul.clean { margin: 0 0 10px; padding-left: 20px; }
+  ul.clean li { margin-bottom: 7px; }
+
+  /* phase steps */
+  .phase { list-style: none; margin: 0; padding: 0; position: relative; }
+  .phase::before { content: ""; position: absolute; left: 15px; top: 12px; bottom: 12px; width: 2px; background: var(--line); }
+  .phase > li { position: relative; padding: 0 0 24px 48px; }
+  .phase > li:last-child { padding-bottom: 0; }
+  .phase .dot { position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; z-index: 1; box-shadow: 0 0 0 4px var(--bg); }
+  .phase .ptitle { font-weight: 650; font-size: 15px; margin-bottom: 6px; }
+  .phase ul { margin: 4px 0 0; padding-left: 18px; }
+  .phase li li { color: var(--muted); font-size: 13.5px; margin-bottom: 5px; }
+
+  .note { background: var(--amber-soft); border: 1px solid var(--line); border-left: 3px solid var(--amber); border-radius: 8px; padding: 12px 16px; font-size: 13.5px; margin: 14px 0; }
+  .note strong { color: var(--amber); }
+  .danger { background: var(--red-soft); border-left-color: var(--red); }
+  .danger strong { color: var(--red); }
+
+  pre { background: var(--accent-soft); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: 12.5px; margin: 8px 0 14px; }
+  pre code { background: none; padding: 0; color: var(--ink); white-space: pre; }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <p class="kicker">Upgrade Plan</p>
+    <h1>Modernizing the CRM AI Sale Recording Auditor</h1>
+    <p>A staged plan to move off end-of-life Python 3.8 / Debian 10 and bring dependencies to their current stable releases — with the risks and migration gotchas called out per step.</p>
+  </header>
+
+  <div class="card tldr">
+    <p style="margin:0"><strong>TL;DR —</strong> Python 3.8 and Debian 10 "Buster" are both end-of-life, and the newest releases of several of your libraries (<code>boto3</code>, <code>urllib3</code>, <code>requests</code>, <code>mutagen</code>) no longer support Python 3.8. The highest-value, lowest-risk move is: <strong>base image → Python&nbsp;3.12 on Debian&nbsp;12 "Bookworm"</strong>, drop two obsolete packages, let the low-risk libraries float to latest, and test the four that jump a major version.</p>
+  </div>
+
+  <!-- 1. TARGET -->
+  <section>
+    <h2><span class="num">1</span> Current → target platform</h2>
+    <div class="cols">
+      <div class="mini">
+        <div class="lbl">Python</div>
+        <span class="from">3.8.6</span><span class="arrow">→</span><span class="to">3.12</span>
+        <div class="sub">3.8 EOL since Oct 2024. 3.12 is supported until Oct 2028 (3.13 → Oct 2029 if you want the longest runway).</div>
+      </div>
+      <div class="mini">
+        <div class="lbl">Base OS</div>
+        <span class="from">Debian 10 Buster</span><span class="arrow">→</span><span class="to">Debian 12 Bookworm</span>
+        <div class="sub">Buster is EOL and only on <code>archive.debian.org</code>. Bookworm is the current stable and removes the archive workaround entirely.</div>
+      </div>
+    </div>
+    <div class="note"><strong>Recommended base image:</strong> <code>python:3.12-slim-bookworm</code>. The <code>slim</code> variant keeps the image small; you already install the system libraries you need (ODBC, kerberos) explicitly.</div>
+  </section>
+
+  <!-- 2. LINKAGE -->
+  <section>
+    <h2><span class="num">2</span> Why the version is the linchpin</h2>
+    <div class="card" style="margin-bottom:0">
+      <p>You can't upgrade the libraries without upgrading Python — the latest releases dropped 3.8/3.9 support:</p>
+      <div class="tablewrap" style="box-shadow:none">
+        <table>
+          <thead><tr><th>Minimum Python required by latest</th><th>Your affected packages</th></tr></thead>
+          <tbody>
+            <tr><td><strong>3.10+</strong></td><td class="desc"><code>boto3</code>, <code>urllib3</code>, <code>requests</code>, <code>mutagen</code></td></tr>
+            <tr><td><strong>3.9+</strong></td><td class="desc"><code>pydantic</code>, <code>openai</code>, <code>pymongo</code>, <code>pyodbc</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin:14px 0 0">Your app imports <code>mutagen</code> and <code>requests</code> directly, so <strong>Python 3.10 is the hard floor</strong> for a full dependency refresh. Going to 3.12 gives comfortable headroom.</p>
+    </div>
+  </section>
+
+  <!-- 3. PACKAGE TABLE -->
+  <section>
+    <h2><span class="num">3</span> Package upgrade matrix</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin-top:-4px">Latest stable versions verified against PyPI. Transitive dependencies are omitted — they resolve automatically once you pin only your direct dependencies.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Package</th><th>Current</th><th>Latest</th><th>Jump</th><th>Risk</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>pyodbc</code></td><td>4.0.34</td><td><strong>5.3.0</strong></td><td>4→5</td><td><span class="risk r-med">Medium</span></td><td class="desc">Major version; pairs with the msodbcsql18 driver change (§5).</td></tr>
+          <tr><td><code>openai</code></td><td>1.56.0</td><td><strong>2.45.0</strong></td><td>1→2</td><td><span class="risk r-med">Medium</span></td><td class="desc"><code>chat.completions</code> API is unchanged; this path is currently disabled, so low practical impact.</td></tr>
+          <tr><td><code>urllib3</code></td><td>1.26.18</td><td><strong>2.7.0</strong></td><td>1→2</td><td><span class="risk r-med">Medium</span></td><td class="desc">Stricter TLS; interacts with the many <code>verify=False</code> calls (warnings only).</td></tr>
+          <tr><td><code>lxml</code></td><td>4.9.3</td><td><strong>6.1.1</strong></td><td>4→6</td><td><span class="risk r-med">Medium</span></td><td class="desc">Not imported anywhere in the code — likely removable rather than upgraded.</td></tr>
+          <tr><td><code>pydantic</code></td><td>2.5.2</td><td><strong>2.13.4</strong></td><td>2→2</td><td><span class="risk r-low">Low</span></td><td class="desc">Same major; your models are simple. <code>pydantic-core</code> follows automatically.</td></tr>
+          <tr><td><code>pymongo</code></td><td>4.6.1</td><td><strong>4.17.0</strong></td><td>4→4</td><td><span class="risk r-low">Low</span></td><td class="desc">Same major.</td></tr>
+          <tr><td><code>boto3</code> / <code>botocore</code></td><td>1.34.0</td><td><strong>~1.43.x</strong></td><td>1→1</td><td><span class="risk r-low">Low</span></td><td class="desc">Same major; the AWS/transcribe path is disabled anyway.</td></tr>
+          <tr><td><code>requests</code></td><td>2.31.0</td><td><strong>2.34.2</strong></td><td>2→2</td><td><span class="risk r-low">Low</span></td><td class="desc">Minor bump.</td></tr>
+          <tr><td><code>mutagen</code></td><td>1.45.0</td><td><strong>1.48.1</strong></td><td>1→1</td><td><span class="risk r-low">Low</span></td><td class="desc">Used for MP3/WAV duration.</td></tr>
+          <tr><td><code>httplib2</code></td><td>0.22.0</td><td><strong>0.32.0</strong></td><td>0→0</td><td><span class="risk r-low">Low</span></td><td class="desc">Used by the Google Chat card sender.</td></tr>
+          <tr><td><code>openpyxl</code></td><td>3.1.2</td><td><strong>3.1.5</strong></td><td>patch</td><td><span class="risk r-low">Low</span></td><td class="desc">Patch only.</td></tr>
+          <tr><td><code>certifi</code></td><td>2023.11.17</td><td><strong>2026.6.17</strong></td><td>CA bundle</td><td><span class="risk r-low">Low</span></td><td class="desc">Refreshed root certificates — worth doing regardless.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 4. REMOVALS -->
+  <section>
+    <h2><span class="num">4</span> Packages to remove (not upgrade)</h2>
+    <div class="card" style="margin-bottom:0">
+      <ul class="clean" style="margin-bottom:0">
+        <li><code>backports.zoneinfo</code> — a Python&nbsp;3.8-only backport. <code>zoneinfo</code> is built into Python&nbsp;3.9+, so this becomes dead weight after the upgrade.</li>
+        <li><code>configparser</code> — the standard library already ships <code>configparser</code> on Python&nbsp;3; the pinned PyPI package is redundant.</li>
+        <li><code>lxml</code> <span style="color:var(--muted)">(verify first)</span> — no <code>import lxml</code> exists in the source. If nothing transitive needs it, drop it instead of taking the 4→6 major bump.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5. GOTCHAS -->
+  <section>
+    <h2><span class="num">5</span> Migration gotchas — beyond version numbers</h2>
+
+    <div class="note danger"><strong>Most likely to bite: the SQL driver.</strong> The Dockerfile installs <code>msodbcsql17</code> from the Microsoft <code>debian/10</code> repo. On Bookworm you switch to the <code>debian/12</code> repo and <strong>msodbcsql18</strong>. Driver&nbsp;18 defaults to <code>Encrypt=yes</code>, so <code>sqlconnect.py</code> needs the driver name updated to <code>ODBC Driver 18 for SQL Server</code> and the connection string will likely need <code>TrustServerCertificate=yes</code> (or a valid server certificate). Test the SQL connection early.</div>
+
+    <ul class="clean">
+      <li><strong>Remove the archive.debian.org workaround.</strong> The <code>sources.list</code> rewrite added for Buster is unnecessary on Bookworm and should be deleted.</li>
+      <li><strong><code>apt-key</code> is gone on Bookworm.</strong> The Microsoft signing key must be added via a <code>signed-by=/usr/share/keyrings/...</code> keyring instead of <code>apt-key add -</code>.</li>
+      <li><strong>urllib3 2.x + <code>verify=False</code>.</strong> Several CRM calls disable TLS verification; expect changed/immaterial warning output. Functionally fine, but confirm during testing.</li>
+      <li><strong>openai 1→2 and pyodbc 4→5.</strong> The two library majors worth an explicit smoke test — even though the OpenAI path is disabled and the <code>chat.completions</code> surface is unchanged.</li>
+    </ul>
+  </section>
+
+  <!-- 6. PHASED PLAN -->
+  <section>
+    <h2><span class="num">6</span> Recommended execution order</h2>
+    <div class="card">
+      <ol class="phase">
+        <li>
+          <span class="dot">1</span>
+          <div class="ptitle">Branch &amp; snapshot</div>
+          <ul>
+            <li>Work on a branch (e.g. <code>chore/upgrade-py312</code>) — never on <code>main</code>.</li>
+            <li>Capture the exact working versions first: <code>pip freeze</code> inside the current container, so you have a rollback reference.</li>
+          </ul>
+        </li>
+        <li>
+          <span class="dot">2</span>
+          <div class="ptitle">Base image + Dockerfile</div>
+          <ul>
+            <li>Switch to <code>python:3.12-slim-bookworm</code>, remove the archive workaround.</li>
+            <li>Repoint the Microsoft repo to <code>debian/12</code>, use a keyring instead of <code>apt-key</code>, install <code>msodbcsql18</code>.</li>
+            <li>Get a clean <code>docker build</code> before touching Python deps.</li>
+          </ul>
+        </li>
+        <li>
+          <span class="dot">3</span>
+          <div class="ptitle">Dependencies</div>
+          <ul>
+            <li>Drop <code>backports.zoneinfo</code> and <code>configparser</code>; verify and likely drop <code>lxml</code>.</li>
+            <li>Pin only your direct dependencies to latest; let transitive ones resolve.</li>
+            <li>Update <code>sqlconnect.py</code> for the Driver 18 name + encryption flags.</li>
+          </ul>
+        </li>
+        <li>
+          <span class="dot">4</span>
+          <div class="ptitle">Test end-to-end</div>
+          <ul>
+            <li>SQL connection (Driver 18), MongoDB, CRM auth, one real audit through the n8n webhook, and a report/alert to Google Chat.</li>
+            <li>Run against a small date window first; confirm de-dup still skips existing documents.</li>
+          </ul>
+        </li>
+        <li>
+          <span class="dot">5</span>
+          <div class="ptitle">Deploy</div>
+          <ul>
+            <li>Build, tag, and push to the GCloud Artifact Registry as today.</li>
+            <li>Keep the previous image tag available for a quick rollback.</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+    <div class="note"><strong>Safe fallback:</strong> if the Bookworm + Driver 18 migration proves fiddly under time pressure, a smaller interim step is <code>python:3.10-bookworm</code> with <code>msodbcsql18</code> — it still gets you onto a supported OS and unblocks every latest library, with Python 3.10 as the minimum floor.</div>
+  </section>
+
+  <footer>
+    Upgrade plan for <code>crm-ai-sale-recording-auditor</code> · versions verified against PyPI &amp; endoflife.date at time of writing · analysis only, no code changed.
+  </footer>
+
+</div>
+</body>
+</html>

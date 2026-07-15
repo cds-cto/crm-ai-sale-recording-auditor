@@ -21,7 +21,11 @@ class AuditorService:
 
         response = r.post(
             url= "https://n8n.srv1027347.hstgr.cloud/webhook/sales-order-audit",
-            json=data
+            json=data,
+            # (connect timeout, read timeout): fail fast if n8n is unreachable (10s),
+            # but allow up to 10 min for the audit itself to run. A hung request now
+            # raises instead of blocking the whole batch forever.
+            timeout=(10, 600),
         )
 
         return response

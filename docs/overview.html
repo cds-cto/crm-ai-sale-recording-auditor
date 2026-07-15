@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM AI Sale Recording Auditor — Project Overview</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --ink: #1c2530;
+    --muted: #5b6675;
+    --line: #e2e6ec;
+    --accent: #2b6cb0;
+    --accent-soft: #e8f0fa;
+    --green: #2f855a;
+    --green-soft: #e6f4ec;
+    --red: #c53030;
+    --red-soft: #fbe8e8;
+    --amber: #b7791f;
+    --amber-soft: #fcf3e3;
+    --purple: #6b46c1;
+    --purple-soft: #efe9fb;
+    --shadow: 0 1px 2px rgba(20,30,45,.06), 0 4px 16px rgba(20,30,45,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f141b;
+      --panel: #171e27;
+      --ink: #e6eaf0;
+      --muted: #9aa6b5;
+      --line: #2a333f;
+      --accent: #6ba6e6;
+      --accent-soft: #1b2836;
+      --green: #7fd1a3;
+      --green-soft: #14251c;
+      --red: #f08a8a;
+      --red-soft: #2a1919;
+      --amber: #e2b366;
+      --amber-soft: #29220f;
+      --purple: #b79df0;
+      --purple-soft: #201a30;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 48px 24px 80px; }
+  header.hero {
+    border-left: 4px solid var(--accent);
+    padding: 4px 0 4px 20px;
+    margin-bottom: 40px;
+  }
+  header.hero .kicker {
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 0 0 8px;
+  }
+  header.hero h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.15; }
+  header.hero p { margin: 0; color: var(--muted); font-size: 16px; max-width: 68ch; }
+
+  h2 {
+    font-size: 20px;
+    margin: 44px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2 .num {
+    font-size: 13px; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 6px;
+    width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+    flex: none;
+  }
+  h3 { font-size: 15px; margin: 24px 0 10px; color: var(--ink); }
+  p { margin: 0 0 14px; }
+  code {
+    font-family: "SF Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: .88em;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 5px;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 18px;
+  }
+
+  /* ---- System grid ---- */
+  .sysgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+  .sys {
+    border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--panel);
+  }
+  .sys .tag {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+    padding: 2px 8px; border-radius: 20px; display: inline-block; margin-bottom: 8px;
+  }
+  .sys strong { display: block; font-size: 14px; margin-bottom: 2px; }
+  .sys span { font-size: 12.5px; color: var(--muted); }
+  .t-in { background: var(--accent-soft); color: var(--accent); }
+  .t-brain { background: var(--purple-soft); color: var(--purple); }
+  .t-out { background: var(--green-soft); color: var(--green); }
+  .t-store { background: var(--amber-soft); color: var(--amber); }
+
+  /* ---- Flow (numbered vertical) ---- */
+  .flow { list-style: none; margin: 0; padding: 0; position: relative; }
+  .flow::before {
+    content: ""; position: absolute; left: 15px; top: 12px; bottom: 12px; width: 2px; background: var(--line);
+  }
+  .flow li { position: relative; padding: 0 0 22px 48px; }
+  .flow li:last-child { padding-bottom: 0; }
+  .flow .dot {
+    position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 14px;
+    display: flex; align-items: center; justify-content: center; z-index: 1;
+    box-shadow: 0 0 0 4px var(--bg);
+  }
+  .flow .step-title { font-weight: 650; font-size: 15px; margin-bottom: 3px; }
+  .flow .step-body { color: var(--muted); font-size: 14px; }
+  .flow .step-body code { font-size: .85em; }
+
+  /* ---- Decision branches ---- */
+  .branch { border-left: 3px solid var(--line); padding: 4px 0 4px 16px; margin: 10px 0 10px 4px; }
+  .branch-row { display: flex; gap: 10px; align-items: baseline; padding: 5px 0; font-size: 14px; }
+  .pill {
+    font-family: "SF Mono", ui-monospace, Consolas, monospace;
+    font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; flex: none; min-width: 46px; text-align: center;
+  }
+  .p-red { background: var(--red-soft); color: var(--red); }
+  .p-amber { background: var(--amber-soft); color: var(--amber); }
+  .p-green { background: var(--green-soft); color: var(--green); }
+  .p-gray { background: var(--line); color: var(--muted); }
+
+  /* ---- Tables ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--panel); }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--accent-soft); color: var(--ink); font-weight: 650; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  td code { white-space: nowrap; }
+  td .desc { color: var(--muted); }
+
+  .note {
+    background: var(--amber-soft); border: 1px solid var(--line); border-left: 3px solid var(--amber);
+    border-radius: 8px; padding: 12px 16px; font-size: 13.5px; color: var(--ink); margin: 14px 0;
+  }
+  .note strong { color: var(--amber); }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <p class="kicker">Project Overview</p>
+    <h1>CRM AI Sale Recording Auditor</h1>
+    <p>A batch job that pulls sales-call recordings from the CRM, runs them through an AI compliance audit, and pushes pass/fail results with error details to reporting channels.</p>
+  </header>
+
+  <!-- WHAT IT DOES -->
+  <section>
+    <h2><span class="num">1</span> What it does</h2>
+    <div class="card">
+      <p>Debt-settlement sales calls must follow strict compliance rules — salespeople can't misrepresent the program (call it a government program, promise refunds, claim no credit impact, etc.). This service <strong>automates that review</strong>. On a schedule it collects newly uploaded recordings, sends each one to an AI auditor that listens for rule violations, and reports the verdict per call. Every result is logged so the same recording is never audited twice.</p>
+      <p style="margin-bottom:0">The whole thing runs as a single Python batch process (<code>src/main.py</code>) containerized with Docker and triggered by a scheduled cron job — there is no long-running server or user-facing UI.</p>
+    </div>
+  </section>
+
+  <!-- SYSTEMS -->
+  <section>
+    <h2><span class="num">2</span> Systems it talks to</h2>
+    <div class="sysgrid">
+      <div class="sys"><span class="tag t-in">Source</span><strong>SQL Server</strong><span>Primary source — queries recording metadata, client, sales rep &amp; balances</span></div>
+      <div class="sys"><span class="tag t-in">Source</span><strong>CRM API</strong><span>cdszone.com — recording download URL, profile status &amp; liability data</span></div>
+      <div class="sys"><span class="tag t-brain">Auditor</span><strong>n8n webhook</strong><span>The active AI audit engine — receives the call, returns violations</span></div>
+      <div class="sys"><span class="tag t-brain">Auditor (legacy)</span><strong>OpenAI + AWS</strong><span>Older path: AWS Transcribe → GPT compliance check (now disabled)</span></div>
+      <div class="sys"><span class="tag t-store">Store</span><strong>MongoDB</strong><span>Result log / de-dup, plus the compliance rule list</span></div>
+      <div class="sys"><span class="tag t-out">Report</span><strong>Make.com</strong><span>Webhooks receive the structured audit report</span></div>
+      <div class="sys"><span class="tag t-out">Report</span><strong>Google Chat</strong><span>Card notifications with a link to the transcript</span></div>
+    </div>
+  </section>
+
+  <!-- MAIN FLOW -->
+  <section>
+    <h2><span class="num">3</span> End-to-end flow</h2>
+    <div class="card">
+      <ol class="flow">
+        <li>
+          <span class="dot">1</span>
+          <div class="step-title">Kick off with a date window</div>
+          <div class="step-body"><code>main.py</code> builds a PDT window (last 15 days → tomorrow) and calls <code>AISaleService.process()</code>.</div>
+        </li>
+        <li>
+          <span class="dot">2</span>
+          <div class="step-title">Wire up services</div>
+          <div class="step-body">Connect to MongoDB, log into the CRM API, and initialize the Auditor, Validation, Reporting and SQL services.</div>
+        </li>
+        <li>
+          <span class="dot">3</span>
+          <div class="step-title">Fetch the batch of recordings</div>
+          <div class="step-body"><code>get_recordings_with_sql()</code> runs one big SQL join and returns only calls that qualify: category = sale recording, recording status = <em>Uploaded</em>, an active profile, and a non-empty enrolled balance. Each row becomes a <code>RecordingModel</code>.</div>
+        </li>
+        <li>
+          <span class="dot">4</span>
+          <div class="step-title">Loop over each recording — <code>handleTask()</code></div>
+          <div class="step-body">Load the compliance rule list from Mongo, then process every recording one at a time (see the per-recording flow below).</div>
+        </li>
+        <li>
+          <span class="dot">5</span>
+          <div class="step-title">Enrich &amp; report</div>
+          <div class="step-body">Pull the profile's status and enrolled date from the CRM, then push the result to the Make.com webhooks (and optionally a Google Chat card).</div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- PER RECORDING -->
+  <section>
+    <h2><span class="num">4</span> Per-recording audit — <code>handling()</code></h2>
+    <div class="card">
+      <ol class="flow">
+        <li>
+          <span class="dot">1</span>
+          <div class="step-title">De-dup check</div>
+          <div class="step-body">If the <code>document_id</code> already exists in MongoDB, stop immediately — nothing is re-audited or re-reported.</div>
+          <div class="branch">
+            <div class="branch-row"><span class="pill p-gray">X100</span><span>Already audited → skip &amp; move on (no report sent).</span></div>
+          </div>
+        </li>
+        <li>
+          <span class="dot">2</span>
+          <div class="step-title">Validate the file</div>
+          <div class="step-body">Confirm the uploaded file is actually audio (<code>.mp3 / .wav / .m4a</code>).</div>
+          <div class="branch">
+            <div class="branch-row"><span class="pill p-red">F101</span><span>Not an audio file → log as failed &amp; report, skip auditing.</span></div>
+          </div>
+        </li>
+        <li>
+          <span class="dot">3</span>
+          <div class="step-title">Prepare context</div>
+          <div class="step-body">Get the recording's download URL from the CRM, then compute the client's <strong>weighted settlement percentage</strong> and <strong>estimated pay-off amount</strong> from their liability profile — the auditor uses these to judge whether the rep quoted realistic numbers.</div>
+        </li>
+        <li>
+          <span class="dot">4</span>
+          <div class="step-title">Send to the AI auditor</div>
+          <div class="step-body"><code>AuditorService.process()</code> POSTs the recording URL, company, settlement %, pay-off amount and client name to the <strong>n8n webhook</strong>, which transcribes and evaluates the call against the compliance rules.</div>
+        </li>
+        <li>
+          <span class="dot">5</span>
+          <div class="step-title">Interpret the response</div>
+          <div class="step-body">Read back the <code>error_code_list</code>, transcript and duration.</div>
+          <div class="branch">
+            <div class="branch-row"><span class="pill p-green">✓ pass</span><span>Empty error list → <code>success = True</code>.</span></div>
+            <div class="branch-row"><span class="pill p-amber">violations</span><span>One or more errors → <code>success = False</code>, keep the error details.</span></div>
+            <div class="branch-row"><span class="pill p-red">X101</span><span>Auditor error / bad response → logged as failed.</span></div>
+          </div>
+        </li>
+        <li>
+          <span class="dot">6</span>
+          <div class="step-title">Log to MongoDB</div>
+          <div class="step-body">Write the full result document (verdict, errors, transcript, duration, metadata) — this both records the outcome and prevents re-auditing next run.</div>
+        </li>
+      </ol>
+    </div>
+    <div class="note"><strong>Note:</strong> The AWS Transcribe + OpenAI GPT path (<code>transcribe_service.py</code>, <code>gpt_service.py</code>) is the original in-house auditing pipeline. It's currently commented out — the live system delegates the whole transcribe-and-audit step to the external n8n webhook instead.</div>
+  </section>
+
+  <!-- MODULES -->
+  <section>
+    <h2><span class="num">5</span> Code map</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>File</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>main.py</code></td><td class="desc">Entry point — sets the date window and starts the run.</td></tr>
+          <tr><td><code>service.py</code></td><td class="desc">Orchestrator (<code>AISaleService</code>) — pulls recordings, drives the per-recording flow, coordinates every other service.</td></tr>
+          <tr><td><code>auditor_service.py</code></td><td class="desc">Sends each recording to the n8n AI-audit webhook. <em>(active auditor)</em></td></tr>
+          <tr><td><code>crm_api_service.py</code></td><td class="desc">CRM auth, recording URLs, profile info, and the settlement-% / pay-off calculations.</td></tr>
+          <tr><td><code>reporting_service.py</code></td><td class="desc">Pushes results to Make.com webhooks and Google Chat cards.</td></tr>
+          <tr><td><code>validation_service.py</code></td><td class="desc">Checks the file is real audio and normalizes error codes.</td></tr>
+          <tr><td><code>gpt_service.py</code></td><td class="desc">Legacy OpenAI compliance auditor (detect sale call → check rules). <em>Disabled.</em></td></tr>
+          <tr><td><code>transcribe_service.py</code></td><td class="desc">Legacy AWS S3 upload + Transcribe pipeline. <em>Disabled.</em></td></tr>
+          <tr><td><code>mongoDB.py</code> · <code>sqlconnect.py</code> · <code>s3connect.py</code></td><td class="desc">Thin connection wrappers for MongoDB, SQL Server (pyodbc) and S3.</td></tr>
+          <tr><td><code>models.py</code></td><td class="desc">Pydantic models — <code>RecordingModel</code>, <code>RecordingBatchModel</code>, <code>WeightPercentageModel</code>.</td></tr>
+          <tr><td><code>constant.py</code> · <code>common.py</code></td><td class="desc">Compliance error codes, category/assignee IDs, folder names and small utilities.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ERROR CODES -->
+  <section>
+    <h2><span class="num">6</span> Result &amp; error codes</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>E100–E118</code></td><td class="desc">Compliance violations — misrepresenting the program (government program, loan company, credit repair, no fees, guaranteed refunds/cancellation, no credit impact, secured/promotional debt, dedicated-account control, and more).</td></tr>
+          <tr><td><code>S115</code></td><td class="desc">Salesperson skipped budgeting with the client.</td></tr>
+          <tr><td><code>F100</code></td><td class="desc">Content shows this wasn't actually a sales call.</td></tr>
+          <tr><td><code>F101</code></td><td class="desc">Uploaded file isn't a valid audio file.</td></tr>
+          <tr><td><code>X100</code></td><td class="desc">Document already exists in Mongo — skipped (control code, not a failure).</td></tr>
+          <tr><td><code>X101</code></td><td class="desc">The AI auditor errored or returned an unusable response.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- DEPLOY -->
+  <section>
+    <h2><span class="num">7</span> How it runs</h2>
+    <div class="card" style="margin-bottom:0">
+      <p>Packaged as a Docker image (Python 3.8.6 with MS SQL ODBC drivers) and pushed to Google Cloud Artifact Registry. Cloud Scheduler triggers it on a cron schedule — an hourly run through the business day, plus a daily mass run — so recordings are audited automatically without anyone kicking it off. Each run exits when the batch is done.</p>
+    </div>
+  </section>
+
+  <footer>
+    Generated overview of the <code>crm-ai-sale-recording-auditor</code> repository · describes the processing flow only.
+  </footer>
+
+</div>
+</body>
+</html>
