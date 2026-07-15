@@ -15,15 +15,6 @@ from s3connect import S3Connect
 from constant import TRANSACTION_CODES
 
 
-# Default Google Chat webhook for per-recording failure alerts.
-# Override by adding a "FailureAlert" key under the [GCHAT] section in config.ini.
-DEFAULT_FAILURE_ALERT_WEBHOOK = (
-    "https://chat.googleapis.com/v1/spaces/AAQASad24FQ/messages"
-    "?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI"
-    "&token=VmHXUi8s0XnQJasU1_VQnblEQ93phwoHDJ7dAa_FQj4"
-)
-
-
 class ReportingService:
     def __init__(self):
         self.current_folder = os.path.dirname(os.path.abspath(__file__))
@@ -32,9 +23,8 @@ class ReportingService:
         config.read(config_file_path)
         self.make_webhook = config["MAKE"]["WEBHOOK"]
         self.make_blank_call_webhook = config["MAKE"]["BLANK_CALL_WEBHOOK"]
-        self.failure_alert_webhook = config.get(
-            "GCHAT", "FailureAlert", fallback=DEFAULT_FAILURE_ALERT_WEBHOOK
-        )
+        # Google Chat failure-alert webhook, read from config.ini ([GCHAT] FailureAlert).
+        self.failure_alert_webhook = config.get("GCHAT", "FailureAlert", fallback=None)
 
     def _getTodayTime(self):
         utc_now = datetime.datetime.now(pytz.utc)
@@ -223,6 +213,13 @@ class ReportingService:
         Post a Google Chat alert when a recording fails to process,
         so failed recordings are visible and can be re-run.
         """
+        if not self.failure_alert_webhook:
+            print(
+                "No [GCHAT] FailureAlert webhook configured in config.ini; "
+                "skipping failure alert."
+            )
+            return
+
         message = (
             "⚠️ *Sale recording failed to process*\n\n"
             f"Client : {recording.first_name} {recording.last_name}\n"
