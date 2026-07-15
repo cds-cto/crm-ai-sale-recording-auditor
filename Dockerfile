@@ -1,66 +1,40 @@
-# Pull official base image and fixing to AMD Architecture
-FROM --platform=linux/amd64 python:3.8.6
+# Pull official base image (Python 3.12 on Debian 12 "Bookworm"), fixed to AMD64
+# so the image runs on GCloud regardless of the machine it is built on.
+FROM --platform=linux/amd64 python:3.12-slim-bookworm
 
 WORKDIR /code
 
-
 # Prevents Python from writing .pyc files
-ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONDONTWRITEBYTECODE=1
 
-# Causes all output to stdout to be flushed immediately
-ENV PYTHONUNBUFFERED 1
+# Causes all output to stdout to be flushed immediately (real-time docker logs)
+ENV PYTHONUNBUFFERED=1
 
-# Mark the image as trusted
-ENV DOCKER_CONTENT_TRUST 1
+# Install system dependencies and the Microsoft ODBC Driver 18 for SQL Server.
+# The official packages-microsoft-prod.deb registers the repo and GPG key the
+# modern way (signed-by keyring) — no deprecated apt-key, no archive workaround.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+        curl gnupg apt-transport-https ca-certificates \
+ && curl -sSL -O https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb \
+ && dpkg -i packages-microsoft-prod.deb \
+ && rm packages-microsoft-prod.deb \
+ && apt-get update \
+ && ACCEPT_EULA=Y apt-get install -y --no-install-recommends \
+        msodbcsql18 mssql-tools18 unixodbc-dev libgssapi-krb5-2 \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
-ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn
-
-# Debian 10 "Buster" is end-of-life and has been moved to archive.debian.org,
-# so the default mirrors return 404. Repoint apt at the archive and skip the
-# expired "Valid-Until" check so package installs still work.
-RUN echo "deb http://archive.debian.org/debian buster main contrib non-free" > /etc/apt/sources.list \
- && echo "deb http://archive.debian.org/debian-security buster/updates main contrib non-free" >> /etc/apt/sources.list \
- && echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
-
-# Updates packages list for the image
-RUN apt-get update
-
-# Installs transport HTTPS
-RUN apt-get install -y curl apt-transport-https
-
-# Retrieves packages from Microsoft
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-RUN curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list
-
-# Updates packages for the image
-RUN apt-get update
-
-# Installs SQL drivers and tools
-RUN ACCEPT_EULA=Y apt-get install -y msodbcsql17 unixodbc-dev
-
-# Installs MS SQL Tools
-RUN ACCEPT_EULA=Y apt-get install -y mssql-tools
-
-# Adds paths to the $PATH environment variable within the .bash_profile and .bashrc files
-RUN echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bash_profile
-RUN echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
-
-# Enables authentication of users and servers on a network
-RUN apt-get install libgssapi-krb5-2 -y
-
+# Make the SQL command-line tools available on PATH
+ENV PATH="$PATH:/opt/mssql-tools18/bin"
 
 COPY ./requirements.txt ./
-RUN pip install --no-cache-dir -r  requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./src ./src
 
 CMD ["python", "./src/main.py"]
 
-
-# docker build -t zoom_call_log_sync .
-# docker run --name test ctocds/call_log_sync 
-# docker stop  test
-# docker rm test
 
 # Step To check requirement after mounting
 # run pip freeze inside docker desktop Terminal

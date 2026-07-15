@@ -2,6 +2,12 @@ from service import AISaleService
 import debugpy
 from datetime import datetime, timedelta
 import pytz
+import urllib3
+
+# The CRM API is called with verify=False (TLS verification disabled), which makes
+# urllib3 emit an InsecureRequestWarning on every request. Suppress that log noise;
+# behavior is unchanged. (The proper fix is to enable certificate verification.)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def main():

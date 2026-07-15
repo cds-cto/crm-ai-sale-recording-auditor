@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM AI Sale Recording Auditor — Upgrade Completed</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #1c2530; --muted: #5b6675; --line: #e2e6ec;
+    --accent: #2b6cb0; --accent-soft: #e8f0fa; --green: #2f855a; --green-soft: #e6f4ec;
+    --red: #c53030; --red-soft: #fbe8e8; --amber: #b7791f; --amber-soft: #fcf3e3;
+    --purple: #6b46c1; --purple-soft: #efe9fb;
+    --shadow: 0 1px 2px rgba(20,30,45,.06), 0 4px 16px rgba(20,30,45,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f141b; --panel: #171e27; --ink: #e6eaf0; --muted: #9aa6b5; --line: #2a333f;
+      --accent: #6ba6e6; --accent-soft: #1b2836; --green: #7fd1a3; --green-soft: #14251c;
+      --red: #f08a8a; --red-soft: #2a1919; --amber: #e2b366; --amber-soft: #29220f;
+      --purple: #b79df0; --purple-soft: #201a30;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 48px 24px 80px; }
+  header.hero { border-left: 4px solid var(--green); padding: 4px 0 4px 20px; margin-bottom: 30px; }
+  header.hero .kicker { text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 700; color: var(--green); margin: 0 0 8px; }
+  header.hero h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.15; }
+  header.hero p { margin: 0; color: var(--muted); font-size: 16px; max-width: 70ch; }
+
+  .badge { display: inline-flex; align-items: center; gap: 8px; background: var(--green-soft); color: var(--green); border: 1px solid var(--line); border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 650; margin-bottom: 26px; }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+
+  h2 { font-size: 20px; margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+  h2 .num { font-size: 13px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 6px; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+  p { margin: 0 0 14px; }
+  code { font-family: "SF Mono", ui-monospace, "Cascadia Code", Consolas, monospace; font-size: .88em; background: var(--accent-soft); color: var(--accent); padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 18px; }
+
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+  .mini { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--panel); }
+  .mini .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 6px; }
+  .mini .from { color: var(--red); font-weight: 650; text-decoration: line-through; opacity: .8; }
+  .mini .arrow { color: var(--muted); margin: 0 7px; }
+  .mini .to { color: var(--green); font-weight: 700; }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--panel); }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--accent-soft); color: var(--ink); font-weight: 650; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  td .desc { color: var(--muted); }
+  .mono { font-family: "SF Mono", ui-monospace, Consolas, monospace; font-size: 12.5px; white-space: nowrap; }
+  .up { color: var(--green); font-weight: 650; }
+
+  ul.clean { margin: 0 0 6px; padding-left: 20px; }
+  ul.clean li { margin-bottom: 8px; }
+  .benefit { display: grid; grid-template-columns: 26px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .benefit:last-child { border-bottom: none; }
+  .benefit .ic { font-size: 18px; line-height: 1.3; }
+  .benefit .bt { font-weight: 650; font-size: 15px; margin-bottom: 2px; }
+  .benefit .bd { color: var(--muted); font-size: 13.5px; }
+
+  .check { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--line); }
+  .check:last-child { border-bottom: none; }
+  .check .tick { color: var(--green); font-weight: 800; flex: none; }
+  .check .mono2 { color: var(--muted); font-family: "SF Mono", ui-monospace, Consolas, monospace; font-size: 12px; margin-left: auto; }
+
+  .note { background: var(--amber-soft); border: 1px solid var(--line); border-left: 3px solid var(--amber); border-radius: 8px; padding: 12px 16px; font-size: 13.5px; margin: 14px 0; }
+  .note strong { color: var(--amber); }
+  pre { background: var(--accent-soft); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: 12.5px; margin: 8px 0 14px; }
+  pre code { background: none; padding: 0; color: var(--ink); white-space: pre; }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <p class="kicker">Upgrade Completed</p>
+    <h1>Platform &amp; Dependency Upgrade</h1>
+    <p>The service was moved off end-of-life Python 3.8 / Debian 10 onto a current, supported stack, with all dependencies refreshed to their latest stable releases. Applied on branch <code>Upgrade-docker-and-requirement</code>.</p>
+  </header>
+
+  <div class="badge"><span class="dot"></span> Image builds clean · Driver 18 verified · all modules import OK</div>
+
+  <!-- 1. AT A GLANCE -->
+  <section>
+    <h2><span class="num">1</span> At a glance</h2>
+    <div class="cols">
+      <div class="mini"><div class="lbl">Python</div><span class="from">3.8.6</span><span class="arrow">→</span><span class="to">3.12.13</span></div>
+      <div class="mini"><div class="lbl">Base OS</div><span class="from">Debian 10 Buster</span><span class="arrow">→</span><span class="to">Debian 12 Bookworm</span></div>
+      <div class="mini"><div class="lbl">SQL ODBC Driver</div><span class="from">17</span><span class="arrow">→</span><span class="to">18</span></div>
+      <div class="mini"><div class="lbl">Base image</div><span class="from">full</span><span class="arrow">→</span><span class="to">slim</span></div>
+    </div>
+  </section>
+
+  <!-- 2. FILES CHANGED -->
+  <section>
+    <h2><span class="num">2</span> What changed, file by file</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>File</th><th>Change</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>Dockerfile</code></td>
+            <td class="desc">Base image → <code>python:3.12-slim-bookworm</code>. ODBC Driver 17 → 18, installed via the official <code>packages-microsoft-prod.deb</code>. Removed the <code>archive.debian.org</code> workaround and the deprecated <code>apt-key</code> usage. Consolidated apt layers and cleaned caches.</td>
+            <td class="desc">Buster/3.8 are EOL; Bookworm/3.12 are supported. The <code>.deb</code> registers the MS repo with a modern signed keyring.</td>
+          </tr>
+          <tr>
+            <td><code>requirements.txt</code></td>
+            <td class="desc">Rewritten to pin only the 12 direct dependencies at latest stable; transitive packages now resolve automatically. Removed 5 obsolete packages.</td>
+            <td class="desc">Smaller, clearer dependency surface; fewer stale pins and CVEs.</td>
+          </tr>
+          <tr>
+            <td><code>src/sqlconnect.py</code></td>
+            <td class="desc">Driver string → <code>ODBC Driver 18 for SQL Server</code>; added <code>Encrypt=no</code> to the connection string.</td>
+            <td class="desc">Driver 18 defaults to <code>Encrypt=yes</code>; <code>Encrypt=no</code> preserves the exact behavior Driver 17 had, so the existing SQL Server keeps working unchanged.</td>
+          </tr>
+          <tr>
+            <td><code>src/main.py</code></td>
+            <td class="desc">Suppressed urllib3 <code>InsecureRequestWarning</code> at startup.</td>
+            <td class="desc">The CRM calls use <code>verify=False</code>; this quiets the (harmless) per-request warning. Behavior is unchanged.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 3. DEPENDENCIES -->
+  <section>
+    <h2><span class="num">3</span> Dependencies</h2>
+    <h3 style="font-size:15px;margin:8px 0 8px">Upgraded (direct)</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Package</th><th>Before</th><th></th><th>After</th></tr></thead>
+        <tbody>
+          <tr><td><code>pyodbc</code></td><td class="mono">4.0.34</td><td>→</td><td class="mono up">5.3.0</td></tr>
+          <tr><td><code>openai</code></td><td class="mono">1.56.0</td><td>→</td><td class="mono up">2.45.0</td></tr>
+          <tr><td><code>pydantic</code></td><td class="mono">2.5.2</td><td>→</td><td class="mono up">2.13.4</td></tr>
+          <tr><td><code>pymongo</code></td><td class="mono">4.6.1</td><td>→</td><td class="mono up">4.17.0</td></tr>
+          <tr><td><code>boto3</code></td><td class="mono">1.34.0</td><td>→</td><td class="mono up">1.43.48</td></tr>
+          <tr><td><code>requests</code></td><td class="mono">2.31.0</td><td>→</td><td class="mono up">2.34.2</td></tr>
+          <tr><td><code>urllib3</code> <span class="desc">(transitive)</span></td><td class="mono">1.26.18</td><td>→</td><td class="mono up">2.7.0</td></tr>
+          <tr><td><code>mutagen</code></td><td class="mono">1.45.0</td><td>→</td><td class="mono up">1.48.1</td></tr>
+          <tr><td><code>httplib2</code></td><td class="mono">0.22.0</td><td>→</td><td class="mono up">0.32.0</td></tr>
+          <tr><td><code>openpyxl</code></td><td class="mono">3.1.2</td><td>→</td><td class="mono up">3.1.5</td></tr>
+          <tr><td><code>certifi</code></td><td class="mono">2023.11.17</td><td>→</td><td class="mono up">2026.6.17</td></tr>
+          <tr><td><code>debugpy</code></td><td class="mono">1.8.0</td><td>→</td><td class="mono up">1.8.21</td></tr>
+          <tr><td><code>pytz</code></td><td class="mono">2023.3</td><td>→</td><td class="mono up">2026.2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3 style="font-size:15px;margin:18px 0 8px">Removed</h3>
+    <div class="card" style="margin-bottom:0">
+      <ul class="clean" style="margin-bottom:0">
+        <li><code>backports.zoneinfo</code> — a Python 3.8-only backport; <code>zoneinfo</code> is now built into the standard library.</li>
+        <li><code>configparser</code> — already part of the Python 3 standard library; the PyPI pin was redundant.</li>
+        <li><code>lxml</code>, <code>beautifulsoup4</code>, <code>dateparser</code> — not imported anywhere in the source, plus their sub-dependencies (<code>soupsieve</code>, <code>regex</code>, <code>tzlocal</code>).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 4. IMPROVEMENTS -->
+  <section>
+    <h2><span class="num">4</span> What this improves</h2>
+    <div class="card">
+      <div class="benefit"><div class="ic">🛡️</div><div><div class="bt">Back on supported, patched software</div><div class="bd">Python 3.8 and Debian 10 stopped receiving security updates (Oct 2024 and mid-2024). Python 3.12 is supported through Oct 2028 and Debian 12 is current — you now receive OS and language security patches again.</div></div></div>
+      <div class="benefit"><div class="ic">⚡</div><div><div class="bt">Faster runtime</div><div class="bd">CPython 3.12 is meaningfully faster than 3.8 across the board, so each batch run does the same work with less CPU time.</div></div></div>
+      <div class="benefit"><div class="ic">📦</div><div><div class="bt">Smaller, cleaner image</div><div class="bd">The <code>slim</code> base plus removing 5 unused packages and cached apt layers means a smaller image — faster pulls, faster deploys, and a smaller attack surface.</div></div></div>
+      <div class="benefit"><div class="ic">🔒</div><div><div class="bt">Current library security &amp; bug fixes</div><div class="bd">Every dependency moved to its latest stable release, picking up years of security patches and fixes in pydantic, openai, pymongo, requests/urllib3, boto3 and the SQL driver.</div></div></div>
+      <div class="benefit"><div class="ic">🧹</div><div><div class="bt">No more fragile build hacks</div><div class="bd">The <code>archive.debian.org</code> workaround and deprecated <code>apt-key</code> call are gone. The build no longer depends on an end-of-life mirror and uses the modern signed-keyring method for the Microsoft repo.</div></div></div>
+      <div class="benefit"><div class="ic">🧰</div><div><div class="bt">Easier to maintain</div><div class="bd">Pinning only direct dependencies means future upgrades are a short, readable list instead of 34 intertwined pins.</div></div></div>
+    </div>
+  </section>
+
+  <!-- 5. VERIFICATION -->
+  <section>
+    <h2><span class="num">5</span> Verification performed</h2>
+    <div class="card">
+      <div class="check"><span class="tick">✓</span> Docker image builds successfully <span class="mono2">exit 0</span></div>
+      <div class="check"><span class="tick">✓</span> All dependencies install with no conflicts <span class="mono2">pip resolved cleanly</span></div>
+      <div class="check"><span class="tick">✓</span> Runtime sees the SQL driver <span class="mono2">['ODBC Driver 18 for SQL Server']</span></div>
+      <div class="check"><span class="tick">✓</span> Interpreter &amp; driver versions confirmed <span class="mono2">python 3.12.13 · pyodbc 5.3.0</span></div>
+      <div class="check"><span class="tick">✓</span> Every application module imports on the new stack <span class="mono2">pydantic 2.13 · openai 2.x</span></div>
+    </div>
+    <div class="note"><strong>Not yet exercised end-to-end:</strong> a live run against the real SQL Server, MongoDB, CRM API and n8n webhook. The build and driver checks are strong signals, but a single real batch run on the new image is the final confirmation before relying on it in production.</div>
+  </section>
+
+  <!-- 6. DEPLOY / ROLLBACK -->
+  <section>
+    <h2><span class="num">6</span> Deploy &amp; rollback</h2>
+    <p>The deploy commands are unchanged — build, tag, and push as before:</p>
+    <pre><code>docker build -t crm-ai-sale-recording-auditor .
+docker tag  crm-ai-sale-recording-auditor us-west2-docker.pkg.dev/polling-apps/core/crm-ai-sale-recording-auditor:lastest
+docker push us-west2-docker.pkg.dev/polling-apps/core/crm-ai-sale-recording-auditor:lastest</code></pre>
+    <p style="margin-bottom:0"><strong>Rollback</strong> is clean: all changes live on the <code>Upgrade-docker-and-requirement</code> branch, so <code>main</code> and the previously deployed image are untouched. If anything misbehaves, redeploy the prior image tag or check out <code>main</code>.</p>
+  </section>
+
+  <!-- 7. NOTES -->
+  <section>
+    <h2><span class="num">7</span> Notes &amp; follow-ups</h2>
+    <ul class="clean">
+      <li><strong>SQL encryption:</strong> the connection uses <code>Encrypt=no</code> to match the old behavior. If/when your DBA enables TLS, switch it to <code>Encrypt=yes;TrustServerCertificate=yes;</code> for encrypted connections.</li>
+      <li><strong>TLS verification (security, optional):</strong> the CRM calls still use <code>verify=False</code>; the warning is only suppressed, not fixed. Enabling proper certificate verification is a worthwhile future hardening step.</li>
+      <li><strong>Unrelated open item:</strong> duplicate rows in the make.com sheet — <code>handleTask</code> currently calls both <code>push_blank_call_to_make_report</code> and <code>push_to_make_report</code> for every recording. Tracked separately from this upgrade.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Upgrade record for <code>crm-ai-sale-recording-auditor</code> · branch <code>Upgrade-docker-and-requirement</code> · versions verified against PyPI and confirmed in the built image.
+  </footer>
+
+</div>
+</body>
+</html>

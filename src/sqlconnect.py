@@ -16,7 +16,7 @@ class SqlConnect():
         self.database = config[config_name]['DATABASE']
         self.uid =  config[config_name]['UID'] 
         self.pwd =    config.get(config_name, 'PWD') 
-        self.driver = 'ODBC Driver 17 for SQL Server'
+        self.driver = 'ODBC Driver 18 for SQL Server'
         
     # CLOSE CONNECTION
     def close(self):
@@ -34,6 +34,10 @@ class SqlConnect():
             f'DATABASE={self.database};'
             f'UID={self.uid};'
             f'PWD={self.pwd};'
+            # ODBC Driver 18 defaults to Encrypt=yes; keep the same behavior as
+            # Driver 17 (unencrypted) to avoid breaking the existing connection.
+            # To use TLS instead, set: 'Encrypt=yes;TrustServerCertificate=yes;'
+            f'Encrypt=no;'
         )
         self.conn = pyodbc.connect(connection_string, timeout=20)
         self.c = self.conn.cursor()
