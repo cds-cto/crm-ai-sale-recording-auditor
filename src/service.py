@@ -2,7 +2,7 @@
 import requests
 import configparser
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 import re
 import json
 import pytz
@@ -33,12 +33,25 @@ class AISaleService:
     # ********************************************************************************************************
 
     def _get_external_ping(self):
-        try:
-            r = requests.Session()
-            res = r.get("https://ipinfo.io/ip", verify=False, timeout=10)
-            print(res.text)
-        except:
-            print("Failed to get external IP")
+        """
+        Attempts to fetch the outbound IP address up to 5 times with 10 seconds between each try.
+        If all 5 attempts fail, it moves on silently.
+        Note: Using a third-party service like ipinfo.io is commonly used and acceptable for quickly determining
+        a machine's public IP in scripting/automation, though it is not suitable for high-frequency or production-critical code due to rate limiting/reliance on an external service.
+        Alternatives include: https://api.ipify.org/, https://ifconfig.me/ip, or similar IP echo services.
+        """
+        for attempt in range(5):
+            try:
+                r = requests.Session()
+                res = r.get("https://ipinfo.io/ip", verify=False, timeout=10)
+                print("Outbound IP:", res.text.strip())
+                time.sleep(10)
+                return
+            except Exception as e:
+                print(f"Attempt {attempt+1}: Failed to get external IP ({e})")
+                if attempt < 4:
+                    time.sleep(10)
+        print("Failed to get external IP after 5 attempts, moving on.")
 
 
 
